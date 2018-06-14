@@ -1,0 +1,21 @@
+{
+  "name": "libarchive.js",
+  "version": "0.0.1",
+  "description": "extract archive files in browser, libarchive port in wasm",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "archive",
+    "extract",
+    "zip",
+    "rar",
+    "tar",
+    "javascript",
+    "js",
+    "browser"
+  ],
+  "author": "Nika Begiashvili",
+  "license": "ISC"
+}
