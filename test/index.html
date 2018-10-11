@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>test webworker</title>
+    </head>
+    <body>
+        <input type="file" id="file" />
+        <script>
+            const worker  = new Worker('../src/webworker/worker.js');
+
+            document.getElementById('file').addEventListener('change', (e) => {
+                const file = e.currentTarget.files[0];
+                worker.postMessage(file);
+            });
+
+            worker.addEventListener('message',(e) => {
+                console.log(e.data);
+                const link = document.createElement( 'a' );
+                link.style.display = 'block';
+                link.textContent = e.data.name;
+                document.body.appendChild( link );
+                const objectURL = URL.createObjectURL( e.data );
+                link.href = objectURL;
+                link.download =  e.data.name;
+            });
+        </script>
+    </body>
+</html>
