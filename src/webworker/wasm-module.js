@@ -18,6 +18,8 @@ class WasmModule{
           getNextEntry: Module.cwrap('get_next_entry', 'number', ['number']),
           // void * get_filedata( void * archive, size_t bufferSize )
           getFileData: Module.cwrap('get_filedata', 'number', ['number','number']),
+          // int archive_read_data_skip(struct archive *_a)
+          skipEntry: Module.cwrap('archive_read_data_skip', 'number', ['number']),
           // void archive_close( void * archive )
           closeArchive: Module.cwrap('archive_close', null, ['number'] ),
           // la_int64_t archive_entry_size( struct archive_entry * )

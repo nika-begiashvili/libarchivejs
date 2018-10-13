@@ -15,13 +15,13 @@
 
             worker.addEventListener('message',(e) => {
                 console.log(e.data);
-                const link = document.createElement( 'a' );
+                /*const link = document.createElement( 'a' );
                 link.style.display = 'block';
                 link.textContent = e.data.name;
                 document.body.appendChild( link );
                 const objectURL = URL.createObjectURL( e.data );
                 link.href = objectURL;
-                link.download =  e.data.name;
+                link.download =  e.data.name;*/
             });
         </script>
     </body>

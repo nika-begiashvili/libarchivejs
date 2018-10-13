@@ -1,4 +1,14 @@
 
+const TYPE_MAP = {
+    32768: 'FILE',
+    16384: 'DIR',
+    40960: 'SYMBOLIC_LINK',
+    49152: 'SOCKET',
+    8192:  'CHARACTER_DEVICE',
+    24576: 'BLOCK_DEVICE',
+    4096:  'NAMED_PIPE',
+};
+
 class ArchiveReader{
     /**
      * archive reader
@@ -38,49 +48,47 @@ class ArchiveReader{
     }
 
     /**
-     * read archive entry
+     * get archive entries
+     * @param {boolean} skipExtraction
      */
-    *entries(){
+    *entries(skipExtraction = false){
         let entry = 1;
         while( true ){
             entry = this._wasmModule.run.getNextEntry(this._archive);
             if( entry === 0 ) break;
-            const fileSize = this._wasmModule.run.getEntrySize(entry);
-            const filePath = this._wasmModule.run.getEntryName(entry);
-            const type = this._wasmModule.run.getEntryType(entry);
-            console.log(`file size: ${fileSize}, file path: ${filePath}, type: ${type}`);
-            const ptr = this._wasmModule.run.getFileData(this._archive,fileSize);
-            if( ptr < 0 ){ // error
-                console.log(this._wasmModule.run.getError(this._archive));
-            }
-            console.log('file ptr: ',ptr);
-            const data = Module.HEAP8.slice(ptr,ptr+fileSize);
-            console.log(ptr);
-            console.log(Module.HEAP8.length);
-            console.log(ptr+fileSize);
-            console.log(Module.HEAP8[ptr]);
-            //Module._free(ptr);
+            const entryData = {
+                size: this._wasmModule.run.getEntrySize(entry),
+                path: this._wasmModule.run.getEntryName(entry),
+                type: TYPE_MAP[this._wasmModule.run.getEntryType(entry)]
+            };
+            if( skipExtraction ){
+                this._wasmModule.run.skipEntry(this._archive);
+            }else{
+                const ptr = this._wasmModule.run.getFileData(this._archive,entryData.size);
+                if( ptr < 0 ){
+                    throw new Error(this._wasmModule.run.getError(this._archive));
+                }
+                const data = Module.HEAP8.slice(ptr,ptr+entryData.size);
+                Module._free(ptr);
 
-            if( type === 32768 ){
-                let fileName = filePath.split('/');
-                fileName = fileName[fileName.length - 1];
-                yield new File([data], fileName, {
-                    type: 'application/octet-stream'
-                });
+                if( entryData.type === 'FILE' ){
+                    let fileName = entryData.path.split('/');
+                    fileName = fileName[fileName.length - 1];
+                    entryData.file = new File([data], fileName, {
+                        type: 'application/octet-stream'
+                    });
+                }
             }
+            yield entryData;
         }
     }
 
     _loadFile(fileBuffer,resolve,reject){
         try{
-            console.log('HEAP SIZE: ', Module.HEAP8.byteLength / 1024 / 1024, ' MB');
             const array = new Uint8Array(fileBuffer);
             this._filePtr = Module._malloc(array.length);
-            console.log('malloc',this._filePtr);
             Module.HEAP8.set(array, this._filePtr);
-            console.log('copy complete');
             this._archive = this._wasmModule.run.openArchive( this._filePtr, array.length );
-            console.log('HEAP SIZE: ', Module.HEAP8.byteLength / 1024 / 1024, ' MB');
             resolve();
         }catch(error){
             reject(error);
