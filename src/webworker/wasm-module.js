@@ -36,6 +36,8 @@ class WasmModule{
           #define AE_IFIFO	((__LA_MODE_T)0010000) // Named pipe
           */
           getEntryType: Module.cwrap('archive_entry_filetype', 'number', ['number']),
+          // const char * archive_error_string(struct archive *); 
+          getError: Module.cwrap('archive_error_string', 'string', ['number']),
         };
         console.log(this.run.getVersion());
     }

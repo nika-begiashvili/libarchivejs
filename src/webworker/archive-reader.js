@@ -50,6 +50,9 @@ class ArchiveReader{
             const type = this._wasmModule.run.getEntryType(entry);
             console.log(`file size: ${fileSize}, file path: ${filePath}, type: ${type}`);
             const ptr = this._wasmModule.run.getFileData(this._archive,fileSize);
+            if( ptr < 0 ){ // error
+                console.log(this._wasmModule.run.getError(this._archive));
+            }
             console.log('file ptr: ',ptr);
             const data = Module.HEAP8.slice(ptr,ptr+fileSize);
             console.log(ptr);
