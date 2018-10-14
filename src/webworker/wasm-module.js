@@ -7,7 +7,7 @@ class WasmModule{
 
     onRuntimeInitialized(){
         console.log('module initialized');
-        this.run = {
+        this.runCode = {
           // const char * get_version()
           getVersion: Module.cwrap('get_version', 'string', []),
           // void * archive_open( const void * buffer, size_t buffer_size)
@@ -40,8 +40,12 @@ class WasmModule{
           getEntryType: Module.cwrap('archive_entry_filetype', 'number', ['number']),
           // const char * archive_error_string(struct archive *); 
           getError: Module.cwrap('archive_error_string', 'string', ['number']),
+          
+          malloc: Module.cwrap('malloc', 'number', ['number']),
+          free: Module.cwrap('free', null, ['number']),
         };
-        console.log(this.run.getVersion());
+        console.log(this.runCode.getVersion());
+        if(this.ready)  this.ready();
     }
 
     print(...text){

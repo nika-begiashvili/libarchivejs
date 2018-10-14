@@ -16,6 +16,7 @@ class ArchiveReader{
      */
     constructor(wasmModule){
         this._wasmModule = wasmModule;
+        this._runCode = wasmModule.runCode;
         this._file = null;
     }
 
@@ -40,8 +41,8 @@ class ArchiveReader{
      * close archive
      */
     close(){
-        this._wasmModule.run.closeArchive(this._archive);
-        Module._free(this._filePtr);
+        this._runCode.closeArchive(this._archive);
+        this._wasmModule._free(this._filePtr);
         this._file = null;
         this._filePtr = null;
         this._archive = null;
@@ -53,23 +54,24 @@ class ArchiveReader{
      */
     *entries(skipExtraction = false){
         let entry = 1;
+        console.log('skipExtraction: '+skipExtraction);
         while( true ){
-            entry = this._wasmModule.run.getNextEntry(this._archive);
+            entry = this._runCode.getNextEntry(this._archive);
             if( entry === 0 ) break;
             const entryData = {
-                size: this._wasmModule.run.getEntrySize(entry),
-                path: this._wasmModule.run.getEntryName(entry),
-                type: TYPE_MAP[this._wasmModule.run.getEntryType(entry)]
+                size: this._runCode.getEntrySize(entry),
+                path: this._runCode.getEntryName(entry),
+                type: TYPE_MAP[this._runCode.getEntryType(entry)]
             };
             if( skipExtraction ){
-                this._wasmModule.run.skipEntry(this._archive);
+                this._runCode.skipEntry(this._archive);
             }else{
-                const ptr = this._wasmModule.run.getFileData(this._archive,entryData.size);
+                const ptr = this._runCode.getFileData(this._archive,entryData.size);
                 if( ptr < 0 ){
-                    throw new Error(this._wasmModule.run.getError(this._archive));
+                    throw new Error(this._runCode.getError(this._archive));
                 }
-                const data = Module.HEAP8.slice(ptr,ptr+entryData.size);
-                Module._free(ptr);
+                const data = this._wasmModule.HEAP8.slice(ptr,ptr+entryData.size);
+                this._wasmModule._free(ptr);
 
                 if( entryData.type === 'FILE' ){
                     let fileName = entryData.path.split('/');
@@ -86,9 +88,9 @@ class ArchiveReader{
     _loadFile(fileBuffer,resolve,reject){
         try{
             const array = new Uint8Array(fileBuffer);
-            this._filePtr = Module._malloc(array.length);
-            Module.HEAP8.set(array, this._filePtr);
-            this._archive = this._wasmModule.run.openArchive( this._filePtr, array.length );
+            this._filePtr = this._runCode.malloc(array.length);
+            this._wasmModule.HEAP8.set(array, this._filePtr);
+            this._archive = this._runCode.openArchive( this._filePtr, array.length );
             resolve();
         }catch(error){
             reject(error);
