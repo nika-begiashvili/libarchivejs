@@ -23,7 +23,7 @@ export class Archive{
     static open(file, options = null){
         options =   options || 
                     Archive._options || 
-                    Archive.init(),console.warn('Automatically initializing using options: ', Archive._options);
+                    Archive.init() && console.warn('Automatically initializing using options: ', Archive._options);
         const arch = new Archive(file,options);
         return arch.open();
     }
@@ -86,9 +86,8 @@ export class Archive{
         return this._postMessage({type: 'EXTRACT_FILES'}, (resolve,reject,msg) => {
             if( msg.type === 'ENTRY' ){
                 const [ target, prop ] = this._getProp(this._content,msg.entry.path);
-                console.log(msg.entry);
                 if( msg.entry.type === 'FILE' ){
-                    target[prop] = msg.entry.file;                    
+                    target[prop] = msg.entry.file;             
                 }
                 return true;
             }else if( msg.type === 'END' ){

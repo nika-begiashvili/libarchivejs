@@ -7,13 +7,14 @@
         <input type="file" id="file" />
         <script type="module" >
 
-            import {Archive} from '../src/libarchive.js'
+            import {Archive} from '../src/libarchive.js';
+
+            Archive.init({
+                workerUrl: '../dist/worker-bundle.js'
+            });
 
             document.getElementById('file').addEventListener('change', async (e) => {
                 const file = e.currentTarget.files[0];
-                Archive.init({
-                    workerUrl: '../src/webworker/worker.js'
-                });
 
                 const archive = await Archive.open(file);
                 

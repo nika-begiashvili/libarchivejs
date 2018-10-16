@@ -9,7 +9,7 @@ const TYPE_MAP = {
     4096:  'NAMED_PIPE',
 };
 
-class ArchiveReader{
+export class ArchiveReader{
     /**
      * archive reader
      * @param {WasmModule} wasmModule emscripten module 
@@ -54,7 +54,6 @@ class ArchiveReader{
      */
     *entries(skipExtraction = false){
         let entry = 1;
-        console.log('skipExtraction: '+skipExtraction);
         while( true ){
             entry = this._runCode.getNextEntry(this._archive);
             if( entry === 0 ) break;

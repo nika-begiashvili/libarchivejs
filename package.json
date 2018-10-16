@@ -1,9 +1,11 @@
 {
   "name": "libarchive.js",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "extract archive files in browser, libarchive port in wasm",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
+    "build": "rollup -c --environment BUILD:production",
+    "build-dev": "rollup -c --environment BUILD:development",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -11,11 +13,17 @@
     "extract",
     "zip",
     "rar",
-    "tar",
+    "gz",
+    "7z",
     "javascript",
     "js",
     "browser"
   ],
   "author": "Nika Begiashvili",
-  "license": "ISC"
+  "license": "MIT",
+  "devDependencies": {
+    "rollup": "^0.66.6",
+    "rollup-plugin-copy-assets": "^1.0.0",
+    "rollup-plugin-terser": "^3.0.0"
+  }
 }

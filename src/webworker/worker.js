@@ -1,17 +1,19 @@
-importScripts('archive-reader.js');
-importScripts('wasm-module.js');
-var Module = new WasmModule();
+//importScripts('archive-reader.js');
+//importScripts('wasm-module.js');
+import {ArchiveReader} from './archive-reader';
+import {WasmModule} from './wasm-module'; 
+self.Module = new WasmModule();
 importScripts('wasm-gen/libarchive.js');
 let reader = null;
 let busy = false;
 
-Module.ready = () => {
-    reader = new ArchiveReader(Module);
+self.Module.ready = () => {
+    reader = new ArchiveReader(self.Module);
     busy = false;
     self.postMessage({type: 'READY'});
 };
 
-onmessage = async ({data: msg}) => {
+self.onmessage = async ({data: msg}) => {
 
     if( busy ){
         self.postMessage({ type: 'BUSY' });
@@ -31,10 +33,10 @@ onmessage = async ({data: msg}) => {
             case 'LIST_FILES':
                 skipExtraction = true;
             case 'EXTRACT_FILES':
-                for( entry of reader.entries(skipExtraction) ){
+                for( const entry of reader.entries(skipExtraction) ){
                     self.postMessage({ type: 'ENTRY', entry });
                 }
-                self.postMessage({ type: 'END' })
+                self.postMessage({ type: 'END' });
                 break;
             default:
                 throw new Error('Invalid Command');

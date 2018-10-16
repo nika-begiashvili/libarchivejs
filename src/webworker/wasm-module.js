@@ -1,4 +1,4 @@
-class WasmModule{
+export class WasmModule{
     constructor(){
         this.preRun = [];
         this.postRun = [];
@@ -6,7 +6,6 @@ class WasmModule{
     }
 
     onRuntimeInitialized(){
-        console.log('module initialized');
         this.runCode = {
           // const char * get_version()
           getVersion: Module.cwrap('get_version', 'string', []),
