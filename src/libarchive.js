@@ -86,7 +86,7 @@ export class Archive{
      * @param {Function} extractCallback
      * 
      */
-    async extractFiles(extractCallback){
+    extractFiles(extractCallback){
         if( this._processed > 1 ){
             return Promise.resolve().then( () => this._content );
         }
