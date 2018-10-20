@@ -53,7 +53,8 @@ export class ArchiveReader{
      * @param {boolean} skipExtraction
      */
     *entries(skipExtraction = false){
-        let entry = 1;
+        this._archive = this._runCode.openArchive( this._filePtr, this._fileLength );
+        let entry;
         while( true ){
             entry = this._runCode.getNextEntry(this._archive);
             if( entry === 0 ) break;
@@ -87,9 +88,9 @@ export class ArchiveReader{
     _loadFile(fileBuffer,resolve,reject){
         try{
             const array = new Uint8Array(fileBuffer);
-            this._filePtr = this._runCode.malloc(array.length);
+            this._fileLength = array.length;
+            this._filePtr = this._runCode.malloc(this._fileLength);
             this._wasmModule.HEAP8.set(array, this._filePtr);
-            this._archive = this._runCode.openArchive( this._filePtr, array.length );
             resolve();
         }catch(error){
             reject(error);

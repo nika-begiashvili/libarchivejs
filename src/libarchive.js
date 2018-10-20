@@ -38,6 +38,7 @@ export class Archive{
         this._worker.addEventListener('message', this._workerMsg.bind(this));
         this._callbacks = [];
         this._content = {};
+        this._processed = 0;
         this._file = file;
     }
 
@@ -63,16 +64,19 @@ export class Archive{
      * @returns {Promise<object>}
      */
     listFiles(){
+        if( this._processed > 0 ){
+            return Promise.resolve().then( () => this._content );
+        }
         return this._postMessage({type: 'LIST_FILES'}, (resolve,reject,msg) => {
             if( msg.type === 'ENTRY' ){
                 const [ target, prop ] = this._getProp(this._content,msg.entry.path);
-                console.log(msg.entry);
                 if( msg.entry.type === 'FILE' ){
                     target[prop] = null;                    
                 }
                 return true;
             }else if( msg.type === 'END' ){
-                resolve(this._content);
+                this._processed = 1;
+                resolve(this._cloneContent(this._content));
             }
         });
     }
@@ -83,6 +87,9 @@ export class Archive{
      * 
      */
     async extractFiles(extractCallback){
+        if( this._processed > 1 ){
+            return Promise.resolve().then( () => this._content );
+        }
         return this._postMessage({type: 'EXTRACT_FILES'}, (resolve,reject,msg) => {
             if( msg.type === 'ENTRY' ){
                 const [ target, prop ] = this._getProp(this._content,msg.entry.path);
@@ -91,9 +98,20 @@ export class Archive{
                 }
                 return true;
             }else if( msg.type === 'END' ){
-                resolve(this._content);
+                this._processed = 2;
+                this._worker.terminate();
+                resolve(this._cloneContent(this._content));
             }
         });
+    }
+
+    _cloneContent(obj){
+        if( obj instanceof File ) return obj;
+        const o = {};
+        for( const prop of Object.keys(obj) ){
+            o[prop] = this._cloneContent(obj[prop]);
+        }
+        return o;
     }
 
     _getProp(obj,path){

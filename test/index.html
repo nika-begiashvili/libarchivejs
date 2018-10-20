@@ -20,7 +20,11 @@
                 
                 performance.mark('list_start');
                 let obj = await archive.extractFiles();
+
+                let list = await archive.extractFiles();
+                list['addon']['addon.py'] = null;
                 performance.mark('list_end');
+                console.log(list);       
                 console.log(obj);       
                 performance.measure('skip_decompression','list_start','list_end');
 
