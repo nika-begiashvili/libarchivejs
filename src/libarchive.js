@@ -63,7 +63,7 @@ export class Archive{
      * Returns object containing directory structure and file information 
      * @returns {Promise<object>}
      */
-    listFiles(){
+    getFilesObject(){
         if( this._processed > 0 ){
             return Promise.resolve().then( () => this._content );
         }
@@ -81,6 +81,12 @@ export class Archive{
         });
     }
 
+    getFilesArray(){
+        return this.getFilesObject().then( (obj) => {
+            return this._objectToArray(obj);
+        });
+    }
+
     /**
      * Returns object containing directory structure and extracted File objects 
      * @param {Function} extractCallback
@@ -94,7 +100,11 @@ export class Archive{
             if( msg.type === 'ENTRY' ){
                 const [ target, prop ] = this._getProp(this._content,msg.entry.path);
                 if( msg.entry.type === 'FILE' ){
-                    target[prop] = msg.entry.file;             
+                    target[prop] = msg.entry.file;
+                    setTimeout(extractCallback.bind(null,{
+                        file: msg.entry.file,
+                        path: msg.entry.path,
+                    }));
                 }
                 return true;
             }else if( msg.type === 'END' ){
@@ -106,12 +116,27 @@ export class Archive{
     }
 
     _cloneContent(obj){
-        if( obj instanceof File ) return obj;
+        if( obj instanceof File || obj === null ) return obj;
         const o = {};
         for( const prop of Object.keys(obj) ){
             o[prop] = this._cloneContent(obj[prop]);
         }
         return o;
+    }
+
+    _objectToArray(obj,path = ''){
+        const files = [];
+        for( const key of Object.keys(obj) ){
+            if( obj[key] instanceof File || obj[key] === null ){
+                files.push({
+                    file: obj[key] || key,
+                    path: path
+                });
+            }else{
+                files.push( ...this._objectToArray(obj[key],`${path}${key}/`) );
+            }
+        }
+        return files;
     }
 
     _getProp(obj,path){

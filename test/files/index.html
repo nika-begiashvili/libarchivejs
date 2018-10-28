@@ -64,7 +64,11 @@
                 try{
                     const file = e.currentTarget.files[0];
                     const archive = await Archive.open(file);
-                    obj = await archive.extractFiles();
+                    //console.log( await archive.getFilesObject() );
+                    //console.log( await archive.getFilesArray() );
+                    obj = await archive.extractFiles(console.log);
+                    //console.log( await archive.getFilesObject() );
+                    //console.log( await archive.getFilesArray() );
                     obj = await fileChecksums(obj);
                 }catch(err){
                     console.error(err);
