@@ -1,6 +1,10 @@
 # Libarchivejs
 
 <p align="left">
+  <a href="https://www.npmjs.com/package/libarchive.js">
+    <img src="https://img.shields.io/npm/v/libarchive.js.svg"
+         alt="npm version">
+  </a>
   <a href="https://travis-ci.com/nika-begiashvili/libarchivejs">
     <img src="https://travis-ci.com/nika-begiashvili/libarchivejs.svg?branch=master"
          alt="build status">
@@ -9,18 +13,14 @@
     <img src="https://david-dm.org/nika-begiashvili/libarchivejs/status.svg"
          alt="dependency status">
   </a>
-  <!--a href="https://www.npmjs.com/package/{TODO}">
-    <img src="https://img.shields.io/npm/v/{TODO}.svg"
-         alt="npm version">
-  </a>
-  <a href="https://packagephobia.now.sh/result?p={TODO}">
-    <img src="https://packagephobia.now.sh/badge?p={TODO}"
+  <a href="https://packagephobia.now.sh/result?p=libarchive.js">
+    <img src="https://packagephobia.now.sh/badge?p=libarchive.js"
          alt="install size">
   </a>
-<a href="https://github.com/nika-begiashvili/libarchivejs/blob/master/LICENSE">
-    <img src="https://img.shields.io/npm/l/{TODO}.svg"
+  <a href="https://github.com/nika-begiashvili/libarchivejs/blob/master/LICENSE">
+    <img src="https://img.shields.io/npm/l/libarchive.js.svg"
          alt="license">
-  </a-->
+  </a>
 </p>
 
 ## Overview
