@@ -43,7 +43,7 @@ export class WasmModule{
           malloc: Module.cwrap('malloc', 'number', ['number']),
           free: Module.cwrap('free', null, ['number']),
         };
-        console.log(this.runCode.getVersion());
+        //console.log(this.runCode.getVersion());
         if(this.ready)  this.ready();
     }
 
