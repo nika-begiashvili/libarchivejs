@@ -68,6 +68,12 @@ describe("using library to extract archives", () => {
         const files = await response();
         expect(files).toEqual(checksum);
     }, 16000);
+    test("extract rar v4 file", async () => {
+        await navigate();
+        await inputFile('archives/test.tar.gz');
+        const files = await response();
+        expect(files).toEqual(checksum);
+    }, 16000);
     // bz2 support not available yet
     /*test("extract tar.bz2 file", async () => {
         await navigate();
