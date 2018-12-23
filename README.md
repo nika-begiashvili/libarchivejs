@@ -25,14 +25,14 @@ Libarchivejs is a archive tool for browser which can extract various types of co
 
 ## How to use
 
-Install with `npm i libarchivejs` and use it as ES module.
-library consists of two parts: ES module and webworker bundle, ES module part is your interface to talk to library, use it like any other module, webworker bundle lives in `libarchivejs/dist` folder so you need to make sure that it is available in your public folder since it will not get bundled if you're using bundler (it's all bundled up already) and specify correct path to `Archive.init()` method 
+Install with `npm i libarchive.js` and use it as ES module.
+library consists of two parts: ES module and webworker bundle, ES module part is your interface to talk to library, use it like any other module, webworker bundle lives in `libarchive.js/dist` folder so you need to make sure that it is available in your public folder since it will not get bundled if you're using bundler (it's all bundled up already) and specify correct path to `Archive.init()` method 
 
 ```js
-import {Archive} from 'libarchivejs/main.js';
+import {Archive} from 'libarchive.js/main.js';
 
 Archive.init({
-    workerUrl: 'libarchivejs/dist/worker-bundle.js'
+    workerUrl: 'libarchive.js/dist/worker-bundle.js'
 });
 
 document.getElementById('file').addEventListener('change', async (e) => {
