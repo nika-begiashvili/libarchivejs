@@ -63,12 +63,12 @@ To get file listing without actually decompressing archive, use one of these met
     await archive.getFilesObject();
     // outputs
     {
-        ".gitignore": null,
+        ".gitignore": {CompressedFile},
         "addon": {
-            "addon.py": null,
-            "addon.xml": null
+            "addon.py": {CompressedFile},
+            "addon.xml": {CompressedFile}
         },
-        "README.md": null
+        "README.md": {CompressedFile}
     }
 
     await archive.getFilesArray();
@@ -87,6 +87,15 @@ decompression might take long for bigger files, to track each file as it gets ex
     archive.extractFiles((entry) => { // { file: {File}, path: {String} }
         console.log(entry);
     });
+```
+
+### Extract single file form archive
+
+To extract single file from archive you can use `extract()` method on returned `CompressedFile`
+
+```js
+    const filesObj = await archive.getFilesObject();
+    const file = await filesObj['.gitignore'].extract();
 ```
 
 ## How it works
