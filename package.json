@@ -28,9 +28,9 @@
   "devDependencies": {
     "jest": "^23.6.0",
     "puppeteer": "^1.10.0",
-    "rollup": "^0.66.6",
+    "rollup": "^1.0.2",
     "rollup-plugin-copy-assets": "^1.0.0",
-    "rollup-plugin-terser": "^3.0.0",
+    "rollup-plugin-terser": "^4.0.1",
     "static-server": "^2.2.1"
   }
 }
