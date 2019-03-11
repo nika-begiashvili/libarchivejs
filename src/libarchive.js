@@ -101,10 +101,12 @@ export class Archive{
                 const [ target, prop ] = this._getProp(this._content,msg.entry.path);
                 if( msg.entry.type === 'FILE' ){
                     target[prop] = msg.entry.file;
-                    setTimeout(extractCallback.bind(null,{
-                        file: msg.entry.file,
-                        path: msg.entry.path,
-                    }));
+                    if (extractCallback !== undefined) {
+                        setTimeout(extractCallback.bind(null,{
+                            file: msg.entry.file,
+                            path: msg.entry.path,
+                        }));
+                    }
                 }
                 return true;
             }else if( msg.type === 'END' ){
