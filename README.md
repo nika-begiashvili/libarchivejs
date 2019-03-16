@@ -74,10 +74,10 @@ To get file listing without actually decompressing archive, use one of these met
     await archive.getFilesArray();
     // outputs
     [
-        {file: ".gitignore", path: ""},
-        {file: "addon.py",   path: "addon/"},
-        {file: "addon.xml",  path: "addon/"},
-        {file: "README.md",  path: ""}
+        {file: {CompressedFile}, path: ""},
+        {file: {CompressedFile},   path: "addon/"},
+        {file: {CompressedFile},  path: "addon/"},
+        {file: {CompressedFile},  path: ""}
     ]
 ```
 if this methods get called after `archive.extractFiles();` they will contain actual files as well
