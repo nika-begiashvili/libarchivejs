@@ -38,6 +38,13 @@ self.onmessage = async ({data: msg}) => {
                 }
                 self.postMessage({ type: 'END' });
                 break;
+            case 'EXTRACT_SINGLE_FILE':
+                for( const entry of reader.entries(true,msg.target) ){
+                    if( entry.fileData ){
+                        self.postMessage({ type: 'FILE', entry });
+                    }
+                }
+                break;
             default:
                 throw new Error('Invalid Command');
         }

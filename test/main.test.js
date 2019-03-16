@@ -43,7 +43,7 @@ beforeAll(async () => {
     });
 });
 
-describe("using library to extract archives", () => {
+describe("extract various compression types", () => {
     test("extract zip file", async () => {
         await navigate();
         await inputFile('archives/test.zip');

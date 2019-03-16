@@ -52,7 +52,7 @@ export class ArchiveReader{
      * get archive entries
      * @param {boolean} skipExtraction
      */
-    *entries(skipExtraction = false){
+    *entries(skipExtraction = false, except = null){
         this._archive = this._runCode.openArchive( this._filePtr, this._fileLength );
         let entry;
         while( true ){
@@ -61,25 +61,31 @@ export class ArchiveReader{
             const entryData = {
                 size: this._runCode.getEntrySize(entry),
                 path: this._runCode.getEntryName(entry),
-                type: TYPE_MAP[this._runCode.getEntryType(entry)]
+                type: TYPE_MAP[this._runCode.getEntryType(entry)],
+                ref: entry,
             };
-            if( skipExtraction ){
+            if( entryData.type === 'FILE' ){
+                let fileName = entryData.path.split('/');
+                entryData.fileName = fileName[fileName.length - 1];
+            }
+
+            if( skipExtraction && except !== entryData.path ){
                 this._runCode.skipEntry(this._archive);
             }else{
                 const ptr = this._runCode.getFileData(this._archive,entryData.size);
                 if( ptr < 0 ){
                     throw new Error(this._runCode.getError(this._archive));
                 }
-                const data = this._wasmModule.HEAP8.slice(ptr,ptr+entryData.size);
+                entryData.fileData = this._wasmModule.HEAP8.slice(ptr,ptr+entryData.size);
                 this._wasmModule._free(ptr);
 
-                if( entryData.type === 'FILE' ){
+                /*if( entryData.type === 'FILE' ){
                     let fileName = entryData.path.split('/');
                     fileName = fileName[fileName.length - 1];
                     entryData.file = new File([data], fileName, {
                         type: 'application/octet-stream'
                     });
-                }
+                }*/
             }
             yield entryData;
         }
