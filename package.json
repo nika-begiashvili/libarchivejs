@@ -1,6 +1,6 @@
 {
   "name": "libarchive.js",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "extract archive files in browser, libarchive port in wasm",
   "main": "main.js",
   "repository": {
