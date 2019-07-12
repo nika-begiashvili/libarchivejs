@@ -21,7 +21,7 @@
 
 ## Overview
 
-Libarchivejs is a archive tool for browser which can extract various types of compression, it's port of [libarchive](https://github.com/libarchive/libarchive) to WebAssembly and javascript wrapper to make it easier to use, since it run's on WebAssembly performance should be comparable to native. supported formats: **ZIP**, **7-Zip**, **GZIP**, **RAR v4**, **TAR** and more
+Libarchivejs is a archive tool for browser which can extract various types of compression, it's port of [libarchive](https://github.com/libarchive/libarchive) to WebAssembly and javascript wrapper to make it easier to use, since it runs on WebAssembly performance should be near native. supported formats: **ZIP**, **7-Zip**, **GZIP**, **RAR v4**, **TAR** and more
 
 ## How to use
 
