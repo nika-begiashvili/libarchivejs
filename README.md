@@ -21,7 +21,7 @@
 
 ## Overview
 
-Libarchivejs is a archive tool for browser which can extract various types of compression, it's port of [libarchive](https://github.com/libarchive/libarchive) to WebAssembly and javascript wrapper to make it easier to use, since it runs on WebAssembly performance should be near native. supported formats: **ZIP**, **7-Zip**, **GZIP**, **RAR v4**, **TAR** and more
+Libarchivejs is a archive tool for browser which can extract various types of compression, it's port of [libarchive](https://github.com/libarchive/libarchive) to WebAssembly and javascript wrapper to make it easier to use, since it runs on WebAssembly performance should be near native. supported formats: **ZIP**, **7-Zip**, **RAR v4**, **RAR v5**, **TAR**. supported compression: **GZIP**, **DEFLATE**, **BZIP2**, **LZMA**
 
 ## How to use
 
@@ -96,6 +96,16 @@ To extract single file from archive you can use `extract()` method on returned `
 ```js
     const filesObj = await archive.getFilesObject();
     const file = await filesObj['.gitignore'].extract();
+```
+
+### Check for encrypted data
+
+```js
+    const archive = await Archive.open(file);
+    await archive.hasEncryptedData();
+    // true - yes
+    // false - no
+    // null - can not be determined
 ```
 
 ## How it works
