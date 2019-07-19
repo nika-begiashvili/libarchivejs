@@ -1,17 +1,14 @@
-//importScripts('archive-reader.js');
-//importScripts('wasm-module.js');
 import {ArchiveReader} from './archive-reader';
-import {WasmModule} from './wasm-module'; 
-self.Module = new WasmModule();
-importScripts('wasm-gen/libarchive.js');
+import {getWasmModule} from './wasm-module'; 
+
 let reader = null;
 let busy = false;
 
-self.Module.ready = () => {
-    reader = new ArchiveReader(self.Module);
+getWasmModule( (wasmModule) => {
+    reader = new ArchiveReader(wasmModule);
     busy = false;
     self.postMessage({type: 'READY'});
-};
+});
 
 self.onmessage = async ({data: msg}) => {
 
@@ -32,6 +29,7 @@ self.onmessage = async ({data: msg}) => {
                 break;
             case 'LIST_FILES':
                 skipExtraction = true;
+            // eslint-disable-next-line no-fallthrough
             case 'EXTRACT_FILES':
                 for( const entry of reader.entries(skipExtraction) ){
                     self.postMessage({ type: 'ENTRY', entry });
@@ -44,6 +42,9 @@ self.onmessage = async ({data: msg}) => {
                         self.postMessage({ type: 'FILE', entry });
                     }
                 }
+                break;
+            case 'CHECK_ENCRYPTION':
+                self.postMessage({ type: 'ENCRYPTION_STATUS', status: reader.hasEncryptedData() });
                 break;
             default:
                 throw new Error('Invalid Command');
@@ -58,6 +59,7 @@ self.onmessage = async ({data: msg}) => {
             } 
         });
     }finally{
+        // eslint-disable-next-line require-atomic-updates
         busy = false;
     }
 };

@@ -61,6 +61,20 @@ export class Archive{
     }
 
     /**
+     * detect if archive has encrypted data
+     * @returns {boolean|null} null if could not be determined
+     */
+    hasEncryptedData(){
+        return this._postMessage({type: 'CHECK_ENCRYPTION'}, 
+            (resolve,reject,msg) => {
+                if( msg.type === 'ENCRYPTION_STATUS' ){
+                    resolve(msg.status);
+                }
+            }
+        );
+    }
+
+    /**
      * Returns object containing directory structure and file information 
      * @returns {Promise<object>}
      */

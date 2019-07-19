@@ -49,21 +49,44 @@ export class ArchiveReader{
     }
 
     /**
+     * detect if archive has encrypted data
+     * @returns {boolean|null} null if could not be determined
+     */
+    hasEncryptedData(){
+        this._archive = this._runCode.openArchive( this._filePtr, this._fileLength );
+        this._runCode.getNextEntry(this._archive);
+        const status = this._runCode.hasEncryptedEntries(this._archive);
+        if( status === 0 ){
+            return false;
+        } else if( status > 0 ){
+            return true;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * get archive entries
      * @param {boolean} skipExtraction
      */
     *entries(skipExtraction = false, except = null){
         this._archive = this._runCode.openArchive( this._filePtr, this._fileLength );
         let entry;
+        //const strPtr = this._runCode.string('nika');
+        //console.log(strPtr);
+        //console.log( this._runCode.addPassphrase(this._archive, strPtr ));
+        //this._runCode.free(strPtr);
         while( true ){
             entry = this._runCode.getNextEntry(this._archive);
             if( entry === 0 ) break;
+
             const entryData = {
                 size: this._runCode.getEntrySize(entry),
                 path: this._runCode.getEntryName(entry),
                 type: TYPE_MAP[this._runCode.getEntryType(entry)],
                 ref: entry,
             };
+
             if( entryData.type === 'FILE' ){
                 let fileName = entryData.path.split('/');
                 entryData.fileName = fileName[fileName.length - 1];
@@ -78,14 +101,6 @@ export class ArchiveReader{
                 }
                 entryData.fileData = this._wasmModule.HEAP8.slice(ptr,ptr+entryData.size);
                 this._wasmModule._free(ptr);
-
-                /*if( entryData.type === 'FILE' ){
-                    let fileName = entryData.path.split('/');
-                    fileName = fileName[fileName.length - 1];
-                    entryData.file = new File([data], fileName, {
-                        type: 'application/octet-stream'
-                    });
-                }*/
             }
             yield entryData;
         }

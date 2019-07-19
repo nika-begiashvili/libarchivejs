@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rollup -c --environment BUILD:production",
     "build-dev": "rollup -c --environment BUILD:development",
-    "test": "jest"
+    "test": "jest --runInBand"
   },
   "keywords": [
     "archive",
@@ -26,6 +26,7 @@
   "author": "Nika Begiashvili",
   "license": "MIT",
   "devDependencies": {
+    "eslint": "^6.0.1",
     "jest": "^24.5.0",
     "puppeteer": "^1.13.0",
     "rollup": "^1.6.0",
