@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
-const {checksum} = require('./checksum');
-const {navigate,inputFile,response,setup,cleanup} = require('./testutils');
+const {checksum} = require('../checksum');
+const {navigate,inputFile,response,setup,cleanup} = require('../testutils');
 
 let browser,page;
 
@@ -10,28 +10,28 @@ beforeAll(async () => {
     page = tmp.page;
 });
 
-describe("Extract ZIP files with various compressions", () => {
-    test("Extract ZIP deflate", async () => {
+describe("Extract TAR files with various compressions", () => {
+    test("Extract TAR without compression", async () => {
         await navigate(page);
-        await inputFile('archives/zip/deflate.zip',page);
+        await inputFile('archives/tar/test.tar',page);
         const files = await response(page);
         expect(files).toEqual(checksum);
     }, 16000);
-    /* test("Extract ZIP deflate64", async () => { // not support
+    test("Extract TAR BZIP2", async () => {
         await navigate(page);
-        await inputFile('archives/zip/deflate64.zip',page);
-        const files = await response(page);
-        expect(files).toEqual(checksum);
-    }, 16000); */
-    test("Extract ZIP bzip2", async () => {
-        await navigate(page);
-        await inputFile('archives/zip/bzip2.zip',page);
+        await inputFile('archives/tar/test.tar.bz2',page);
         const files = await response(page);
         expect(files).toEqual(checksum);
     }, 16000);
-    test("Extract ZIP lzma", async () => {
+    test("Extract TAR GZIP", async () => {
         await navigate(page);
-        await inputFile('archives/zip/lzma.zip',page);
+        await inputFile('archives/tar/test.tar.gz',page);
+        const files = await response(page);
+        expect(files).toEqual(checksum);
+    }, 16000);
+    test("Extract TAR LZMA2", async () => {
+        await navigate(page);
+        await inputFile('archives/tar/test.tar.xz',page);
         const files = await response(page);
         expect(files).toEqual(checksum);
     }, 16000);

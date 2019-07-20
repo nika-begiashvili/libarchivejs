@@ -31,8 +31,8 @@ module.exports = {
         server.stop();
         browser.close();
     },
-    navigate: async function (page){
-        await page.goto(`http://127.0.0.1:${port}/test/files/index.html`);
+    navigate: async function (page, path = 'index.html') {
+        await page.goto(`http://127.0.0.1:${port}/test/files/${path}`);
     },
     inputFile: async function (file,page){
         const fileInp = await page.$('#file');

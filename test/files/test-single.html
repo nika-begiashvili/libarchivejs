@@ -65,21 +65,11 @@
                     const file = e.currentTarget.files[0];
                     const archive = await Archive.open(file);
                     const files =  await archive.getFilesArray();
-                    //console.log(files);
                     fileObj = await files[0].file.extract();
-
-                    objBefore = await archive.getFilesObject();
-                    //console.log(f1);
-                    objAfter = await archive.extractFiles();
-                    //console.log( await archive.getFilesObject() );
-                    //console.log( await archive.getFilesArray() );
-                    objAfter = await fileChecksums(objAfter);
                 }catch(err){
                     console.error(err);
                 }finally{
-                    window.fileObj = await getChecksum(fileObj);
-                    window.obj = objAfter;
-                    window.objBefore = objBefore;
+                    window.obj = await getChecksum(fileObj);
                     finish();
                 }
             });
