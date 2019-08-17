@@ -75,6 +75,19 @@ export class Archive{
     }
 
     /**
+     * set password to be used when reading archive
+     */
+    usePassword(archivePassword){
+        return this._postMessage({type: 'SET_PASSPHRASE', passphrase: archivePassword},
+            (resolve,reject,msg) => {
+                if( msg.type === 'PASSPHRASE_STATUS' ){
+                    resolve(msg.status);
+                }
+            }
+        );
+    }
+
+    /**
      * Returns object containing directory structure and file information 
      * @returns {Promise<object>}
      */

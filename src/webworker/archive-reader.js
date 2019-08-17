@@ -18,6 +18,7 @@ export class ArchiveReader{
         this._wasmModule = wasmModule;
         this._runCode = wasmModule.runCode;
         this._file = null;
+        this._passphrase = null;
     }
 
     /**
@@ -53,7 +54,7 @@ export class ArchiveReader{
      * @returns {boolean|null} null if could not be determined
      */
     hasEncryptedData(){
-        this._archive = this._runCode.openArchive( this._filePtr, this._fileLength );
+        this._archive = this._runCode.openArchive( this._filePtr, this._fileLength, this._passphrase );
         this._runCode.getNextEntry(this._archive);
         const status = this._runCode.hasEncryptedEntries(this._archive);
         if( status === 0 ){
@@ -66,16 +67,21 @@ export class ArchiveReader{
     }
 
     /**
+     * set passphrase to be used with archive
+     * @param {*} passphrase 
+     */
+    setPassphrase(passphrase){
+        this._passphrase = passphrase;
+    }
+
+    /**
      * get archive entries
      * @param {boolean} skipExtraction
+     * @param {string} except don't skip this entry
      */
     *entries(skipExtraction = false, except = null){
-        this._archive = this._runCode.openArchive( this._filePtr, this._fileLength );
+        this._archive = this._runCode.openArchive( this._filePtr, this._fileLength, this._passphrase );
         let entry;
-        //const strPtr = this._runCode.string('nika');
-        //console.log(strPtr);
-        //console.log( this._runCode.addPassphrase(this._archive, strPtr ));
-        //this._runCode.free(strPtr);
         while( true ){
             entry = this._runCode.getNextEntry(this._archive);
             if( entry === 0 ) break;

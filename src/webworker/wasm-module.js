@@ -22,7 +22,7 @@ export class WasmModule{
             getVersion: this.cwrap('get_version', 'string', []),
             // void * archive_open( const void * buffer, size_t buffer_size)
             // retuns archive pointer
-            openArchive: this.cwrap('archive_open', 'number', ['number','number']),
+            openArchive: this.cwrap('archive_open', 'number', ['number','number','string']),
             // void * get_entry(void * archive)
             // return archive entry pointer
             getNextEntry: this.cwrap('get_next_entry', 'number', ['number']),
@@ -74,8 +74,8 @@ export class WasmModule{
             hasEncryptedEntries: this.cwrap('archive_read_has_encrypted_entries', 'number', ['number']),
             // __LA_DECL int archive_read_add_passphrase(struct archive *, const char *);
             addPassphrase: this.cwrap('archive_read_add_passphrase', 'number', ['number','string']),
-          
-            string: (str) => this.allocate(this.intArrayFromString(str), 'i8', ALLOC_NORMAL),
+          //this.stringToUTF(str), //
+            string: (str) => this.allocate(this.intArrayFromString(str), 'i8', 0),
             malloc: this.cwrap('malloc', 'number', ['number']),
             free: this.cwrap('free', null, ['number']),
         };

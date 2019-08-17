@@ -46,6 +46,10 @@ self.onmessage = async ({data: msg}) => {
             case 'CHECK_ENCRYPTION':
                 self.postMessage({ type: 'ENCRYPTION_STATUS', status: reader.hasEncryptedData() });
                 break;
+            case 'SET_PASSPHRASE':
+                reader.setPassphrase( msg.passphrase );
+                self.postMessage({ type: 'PASSPHRASE_STATUS', status: true });
+                break;
             default:
                 throw new Error('Invalid Command');
         }
