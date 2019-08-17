@@ -108,6 +108,14 @@ To extract single file from archive you can use `extract()` method on returned `
     // null - can not be determined
 ```
 
+### Extract encrypted archive
+
+```js
+    const archive = await Archive.open(file);
+    await archive.usePassword("password");
+    let obj = await archive.extractFiles();
+```
+
 ## How it works
 
 Libarchivejs is port of popular [libarchive](https://github.com/libarchive/libarchive) C library to WASM. since WASM runs in current thread library uses WebWorkers for heavy lifting, ES Module (Archive class) is just a client for WebWorker, it's tiny and doesn't take up much space.

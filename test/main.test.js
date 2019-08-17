@@ -24,6 +24,14 @@ describe("extract various compression types", () => {
         const file = await response(page);
         expect(file).toEqual(checksum['.gitignore']);
     }, 16000);
+    
+    test("extract encrypted zip", async () => {
+        await navigate(page,'encryption.html');
+        await inputFile('archives/encrypted.zip',page);
+        const {files,encrypted} = await response(page);
+        expect(encrypted).toEqual(true);
+        expect(files).toEqual(checksum);
+    }, 16000);
 });
 
 afterAll(() => {
