@@ -21,12 +21,13 @@
 
 ## Overview
 
-Libarchivejs is a archive tool for browser which can extract various types of compression, it's port of [libarchive](https://github.com/libarchive/libarchive) to WebAssembly and javascript wrapper to make it easier to use, since it runs on WebAssembly performance should be near native. supported formats: **ZIP**, **7-Zip**, **RAR v4**, **RAR v5**, **TAR**. supported compression: **GZIP**, **DEFLATE**, **BZIP2**, **LZMA**
+Libarchivejs is a archive tool for browser which can extract various types of compression, it's a port of [libarchive](https://github.com/libarchive/libarchive) to WebAssembly and javascript wrapper to make it easier to use. Since it runs on WebAssembly performance should be near native. Supported formats: **ZIP**, **7-Zip**, **RAR v4**, **RAR v5**, **TAR**. Supported compression: **GZIP**, **DEFLATE**, **BZIP2**, **LZMA**
 
 ## How to use
 
-Install with `npm i libarchive.js` and use it as ES module.
-library consists of two parts: ES module and webworker bundle, ES module part is your interface to talk to library, use it like any other module, webworker bundle lives in `libarchive.js/dist` folder so you need to make sure that it is available in your public folder since it will not get bundled if you're using bundler (it's all bundled up already) and specify correct path to `Archive.init()` method 
+Install with `npm i libarchive.js` and use it as a ES module.
+
+The library consists of two parts: ES module and webworker bundle, ES module part is your interface to talk to library, use it like any other module. The webworker bundle lives in the `libarchive.js/dist` folder so you need to make sure that it is available in your public folder since it will not get bundled if you're using bundler (it's all bundled up already) and specify correct path to `Archive.init()` method 
 
 ```js
 import {Archive} from 'libarchive.js/main.js';
@@ -80,18 +81,18 @@ To get file listing without actually decompressing archive, use one of these met
         {file: {CompressedFile},  path: ""}
     ]
 ```
-if this methods get called after `archive.extractFiles();` they will contain actual files as well
+If these methods get called after `archive.extractFiles();` they will contain actual files as well.
 
-decompression might take long for bigger files, to track each file as it gets extracted `archive.extractFiles` accepts callback
+Decompression might take a while for larger files. To track each file as it gets extracted, `archive.extractFiles` accepts callback
 ```js
     archive.extractFiles((entry) => { // { file: {File}, path: {String} }
         console.log(entry);
     });
 ```
 
-### Extract single file form archive
+### Extract single file from archive
 
-To extract single file from archive you can use `extract()` method on returned `CompressedFile`
+To extract a single file from the archive you can use the `extract()` method on the returned `CompressedFile`.
 
 ```js
     const filesObj = await archive.getFilesObject();
@@ -118,6 +119,8 @@ To extract single file from archive you can use `extract()` method on returned `
 
 ## How it works
 
-Libarchivejs is port of popular [libarchive](https://github.com/libarchive/libarchive) C library to WASM. since WASM runs in current thread library uses WebWorkers for heavy lifting, ES Module (Archive class) is just a client for WebWorker, it's tiny and doesn't take up much space.
-only when you actually open archive file web worker will be spawn and WASM module will be downloaded, each `Archive.open` call corresponds to each WebWorker.
-after calling `extractFiles` worker will be terminated to free up memory, client will still work with cached data
+Libarchivejs is a port of the popular [libarchive](https://github.com/libarchive/libarchive) C library to WASM. Since WASM runs in the current thread, the library uses WebWorkers for heavy lifting. The ES Module (Archive class) is just a client for WebWorker. It's tiny and doesn't take up much space.
+
+Only when you actually open archive file will the web worker be spawned and WASM module will be downloaded. Each `Archive.open` call corresponds to each WebWorker.
+
+After calling an `extractFiles` worker, it will be terminated to free up memory. The client will still work with cached data.
