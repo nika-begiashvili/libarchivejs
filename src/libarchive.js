@@ -59,6 +59,13 @@ export class Archive{
             }
         });
     }
+    
+    /**
+     * Terminate worker to free up memory
+     */
+    close() {
+        this._worker.terminate();
+    }
 
     /**
      * detect if archive has encrypted data
