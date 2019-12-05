@@ -64,7 +64,10 @@ export class Archive{
      * Terminate worker to free up memory
      */
     close() {
-        this._worker.terminate();
+        if(this.processed < 2) {
+            this._processed = 2;
+            this._worker.terminate();
+        }
     }
 
     /**
@@ -124,16 +127,21 @@ export class Archive{
     }
 
     extractSingleFile(target){
-        return this._postMessage({type: 'EXTRACT_SINGLE_FILE', target: target}, 
-            (resolve,reject,msg) => {
-                if( msg.type === 'FILE' ){
-                    const file = new File([msg.entry.fileData], msg.entry.fileName, {
-                        type: 'application/octet-stream'
-                    });
-                    resolve(file);
+        // Prevent extraction if worker already terminated
+        if( this._processed < 2 ) {
+            return this._postMessage({type: 'EXTRACT_SINGLE_FILE', target: target}, 
+                (resolve,reject,msg) => {
+                    if( msg.type === 'FILE' ){
+                        const file = new File([msg.entry.fileData], msg.entry.fileName, {
+                            type: 'application/octet-stream'
+                        });
+                        resolve(file);
+                    }
                 }
-            }
-        );
+            );
+        } else {
+            // How to handle this ?
+        }
     }
 
     /**
