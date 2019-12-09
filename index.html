@@ -17,10 +17,10 @@
 
         </div>
         <script type="module">
-            import {Archive} from '/node_modules/libarchive.js/main.js';
+            import {Archive} from './node_modules/libarchive.js/main.js';
 
             Archive.init({
-                workerUrl: '/node_modules/libarchive.js/dist/worker-bundle.js'
+                workerUrl: '/libarchivejs/node_modules/libarchive.js/dist/worker-bundle.js'
             });
 
             document.getElementById('file').addEventListener('change', async (e) => {
