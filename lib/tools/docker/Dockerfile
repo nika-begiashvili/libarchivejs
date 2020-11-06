@@ -22,6 +22,7 @@ ENV LDLIBS "-lz -lssl -lcrypto"
 ENV LDFLAGS "-L/usr/local/lib"
 
 # compile openSSL to LLVM
+# edit Makefiles to fit emcc path and avoid compile option errors
 WORKDIR /opt/openssl-1.0.2s
 RUN cd /opt/openssl-1.0.2s && emmake bash -c "./Configure -no-asm -no-apps no-ssl2 no-ssl3 no-hw no-deprecated shared no-dso linux-generic32" && \
     sed -i 's/CC= $(CROSS_COMPILE)\/emsdk_portable\/emscripten\/tag-1.39.4\/emcc/CC= $(CROSS_COMPILE)cc/' Makefile && \
