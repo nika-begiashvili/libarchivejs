@@ -1,4 +1,4 @@
-FROM trzeci/emscripten
+FROM trzeci/emscripten:1.39.4-ubuntu
 
 WORKDIR /opt
 
@@ -24,7 +24,8 @@ ENV LDFLAGS "-L/usr/local/lib"
 # compile openSSL to LLVM
 WORKDIR /opt/openssl-1.0.2s
 RUN cd /opt/openssl-1.0.2s && emmake bash -c "./Configure -no-asm -no-apps no-ssl2 no-ssl3 no-hw no-deprecated shared no-dso linux-generic32" && \
-    sed -i 's/CC= $(CROSS_COMPILE)\/emsdk_portable\/sdk\/emcc/CC= $(CROSS_COMPILE)cc/' Makefile && \
+    sed -i 's/CC= $(CROSS_COMPILE)\/emsdk_portable\/emscripten\/tag-1.39.4\/emcc/CC= $(CROSS_COMPILE)cc/' Makefile && \
+    sed -i 's/-Bsymbolic/ /' Makefile.shared && \
     emmake make && \
     cd /usr/local/lib && \
     ln -s /opt/openssl-1.0.2s/libssl.a && \
