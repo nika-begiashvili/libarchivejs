@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 import libarchive from './wasm-gen/libarchive.js';
 
+import { wasmRoot } from '../platform-browser.js';
+
 export class WasmModule{
     constructor(){
         this.preRun = [];
@@ -85,7 +87,7 @@ export class WasmModule{
     monitorRunDependencies(){}
 
     locateFile(path /* ,prefix */ ){
-        return `wasm-gen/${path}`;
+        return `${wasmRoot}/${path}`;
     }
 }
 

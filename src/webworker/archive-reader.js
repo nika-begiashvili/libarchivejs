@@ -1,3 +1,4 @@
+import { FileReader } from '../platform-browser.js';
 
 const TYPE_MAP = {
     32768: 'FILE',

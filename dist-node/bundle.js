@@ -1,8 +1,51 @@
-import { CompressedFile } from "./compressed-file.js";
+'use strict';
 
-import { Worker, File, workerPath } from './platform-browser.js';
+Object.defineProperty(exports, '__esModule', { value: true });
 
-export class Archive{
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var fileApi = require('file-api');
+var Worker = _interopDefault(require('web-worker'));
+
+/**
+ * Represents compressed file before extraction
+ */
+class CompressedFile{
+
+    constructor(name,size,path,archiveRef){
+        this._name = name;
+        this._size = size;
+        this._path = path;
+        this._archiveRef = archiveRef;
+    }
+
+    /**
+     * file name
+     */
+    get name(){
+        return this._name;
+    }
+    /**
+     * file size
+     */
+    get size(){
+        return this._size;
+    }
+
+    /**
+     * Extract file from archive
+     * @returns {Promise<File>} extracted file
+     */
+    extract(){
+        return this._archiveRef.extractSingleFile(this._path);
+    }
+
+}
+
+// node.js shim definitions
+let workerPath = './dist-node/worker-bundle.js';
+
+class Archive{
 
     /**
      * Initialize libarchivejs
@@ -134,7 +177,7 @@ export class Archive{
         return this._postMessage({type: 'EXTRACT_SINGLE_FILE', target: target}, 
             (resolve,reject,msg) => {
                 if( msg.type === 'FILE' ){
-                    const file = new File([msg.entry.fileData], msg.entry.fileName, {
+                    const file = new fileApi.File([msg.entry.fileData], msg.entry.fileName, {
                         type: 'application/octet-stream'
                     });
                     resolve(file);
@@ -156,7 +199,7 @@ export class Archive{
             if( msg.type === 'ENTRY' ){
                 const [ target, prop ] = this._getProp(this._content,msg.entry.path);
                 if( msg.entry.type === 'FILE' ){
-                    target[prop] = new File([msg.entry.fileData], msg.entry.fileName, {
+                    target[prop] = new fileApi.File([msg.entry.fileData], msg.entry.fileName, {
                         type: 'application/octet-stream'
                     });
                     if (extractCallback !== undefined) {
@@ -176,7 +219,7 @@ export class Archive{
     }
 
     _cloneContent(obj){
-        if( obj instanceof File || obj instanceof CompressedFile || obj === null ) return obj;
+        if( obj instanceof fileApi.File || obj instanceof CompressedFile || obj === null ) return obj;
         const o = {};
         for( const prop of Object.keys(obj) ){
             o[prop] = this._cloneContent(obj[prop]);
@@ -187,12 +230,12 @@ export class Archive{
     _objectToArray(obj,path = ''){
         const files = [];
         for( const key of Object.keys(obj) ){
-            if( obj[key] instanceof File || obj[key] instanceof CompressedFile || obj[key] === null ){
+            if( obj[key] instanceof fileApi.File || obj[key] instanceof CompressedFile || obj[key] === null ){
                 files.push({
                     file: obj[key] || key,
                     path: path
                 });
-            }else{
+            }else {
                 files.push( ...this._objectToArray(obj[key],`${path}${key}/`) );
             }
         }
@@ -223,7 +266,7 @@ export class Archive{
             reject('worker is busy');
         }else if( msg.type === 'ERROR' ){
             reject(msg.error);
-        }else{
+        }else {
             return callback(resolve,reject,msg);
         }
     }
@@ -237,3 +280,5 @@ export class Archive{
     }
 
 }
+
+exports.Archive = Archive;
