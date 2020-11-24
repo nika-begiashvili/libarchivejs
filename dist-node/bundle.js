@@ -43,7 +43,13 @@ class CompressedFile{
 }
 
 // node.js shim definitions
-let workerPath = './dist-node/worker-bundle.js';
+//
+// __dirname is relative to dist-node/, as it is evaluated from bundle
+// on runtime.
+
+let wasmRoot = `${__dirname}/wasm-gen`;
+// web-worker package requires a valid URL
+let workerPath = `file:///${__dirname}/worker-bundle.js`;
 
 class Archive{
 

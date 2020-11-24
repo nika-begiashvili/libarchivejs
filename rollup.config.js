@@ -45,6 +45,11 @@ export default [
         plugins: [
             replace({
                 'platform-browser.js': 'platform-node.js'
+            }),
+            copy({
+                assets: [
+                    './src/webworker/wasm-gen'
+                ],
             })
         ],
         external: [ 'file-api', 'web-worker' ]

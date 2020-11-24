@@ -4,8 +4,13 @@ var fileApi = require('file-api');
 require('web-worker');
 
 // node.js shim definitions
+//
+// __dirname is relative to dist-node/, as it is evaluated from bundle
+// on runtime.
 
-let wasmRoot = 'src/webworker/wasm-gen';
+let wasmRoot = `${__dirname}/wasm-gen`;
+// web-worker package requires a valid URL
+let workerPath = `file:///${__dirname}/worker-bundle.js`;
 
 const TYPE_MAP = {
     32768: 'FILE',
