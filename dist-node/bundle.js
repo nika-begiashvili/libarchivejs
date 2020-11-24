@@ -42,6 +42,9 @@ class CompressedFile{
 
 }
 
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "(wasmRoot|crypto)" }] */
+    // Referenced in worker-bundle.js, not in main bundle.
+
 // node.js shim definitions
 //
 // __dirname is relative to dist-node/, as it is evaluated from bundle

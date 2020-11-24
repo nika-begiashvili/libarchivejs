@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 import libarchive from './wasm-gen/libarchive.js';
 
-import { wasmRoot } from '../platform-browser.js';
+import { wasmRoot } from '../shim/browser.js';
 
 export class WasmModule{
     constructor(){

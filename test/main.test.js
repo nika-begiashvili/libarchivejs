@@ -10,7 +10,7 @@ beforeAll(async () => {
     page = tmp.page;
 });
 
-describe("extract various compression types", () => {
+describe("extract various compression types in browser", () => {
     test("extract 7z file", async () => {
         await navigate(page);
         await inputFile('archives/test.7z',page);

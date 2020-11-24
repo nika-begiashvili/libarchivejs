@@ -29,7 +29,7 @@ export default [
         ],
         plugins: [
             replace({
-                'platform-browser.js': 'platform-node.js'
+                'shim/browser.js': 'shim/node.js'
             })
         ],
         external: [ 'file-api', 'web-worker' ]
@@ -44,7 +44,7 @@ export default [
         ],
         plugins: [
             replace({
-                'platform-browser.js': 'platform-node.js'
+                'shim/browser.js': 'shim/node.js'
             }),
             copy({
                 assets: [
@@ -53,5 +53,20 @@ export default [
             })
         ],
         external: [ 'file-api', 'web-worker' ]
+    },
+    {
+        input: 'test/files/tests.js',
+        output: [
+            {
+                file: 'test/node/test-bundle.js',
+                format: 'cjs'
+            },
+        ],
+        plugins: [
+            replace({
+                'shim/browser.js': 'shim/test-node.js'
+            })
+        ],
+        external: [ 'file-api', 'web-worker', '@peculiar/webcrypto' ]
     }
 ];

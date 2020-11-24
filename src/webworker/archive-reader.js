@@ -1,4 +1,4 @@
-import { FileReader } from '../platform-browser.js';
+import { FileReader } from '../shim/browser.js';
 
 const TYPE_MAP = {
     32768: 'FILE',
