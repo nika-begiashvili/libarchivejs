@@ -38,7 +38,7 @@
     "static-server": "^2.2.1"
   },
   "dependencies": {
-    "file-api": "git+https://github.com/marcolovescode/file-api.git",
+    "file-api": "https://github.com/marcolovescode/file-api/archive/master.tar.gz",
     "web-worker": "^1.0.0"
   }
 }
