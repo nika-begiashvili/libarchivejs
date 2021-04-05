@@ -219,9 +219,9 @@ export class Archive{
     }
 
     _msgHandler(callback,_resolve,reject,msg){
-        const resolve = () => {
+        const resolve = (...args) => {
             this._callbacks.delete(callback)
-            _resolve()
+            _resolve(...args)
         }
         if( msg.type === 'BUSY' ){
             reject('worker is busy');
