@@ -132,6 +132,7 @@ export class Archive{
 
         return this._postMessage({type: 'EXTRACT_SINGLE_FILE', target: target}, 
             (resolve,reject,msg) => {
+                console.log(msg, target);
                 if( msg.type === 'FILE' && msg.target === target){
                     const file = new File([msg.entry.fileData], msg.entry.fileName, {
                         type: 'application/octet-stream'
