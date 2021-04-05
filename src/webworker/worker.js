@@ -39,7 +39,7 @@ self.onmessage = async ({data: msg}) => {
             case 'EXTRACT_SINGLE_FILE':
                 for( const entry of reader.entries(true,msg.target) ){
                     if( entry.fileData ){
-                        self.postMessage({ type: 'FILE', entry });
+                        self.postMessage({ type: 'FILE', entry, target: msg.target });
                     }
                 }
                 break;
