@@ -233,7 +233,7 @@ export class Archive{
     }
 
     _workerMsg({data: msg}){
-        this._callbacks.forEach(cb => { cb() })
+        this._callbacks.forEach(cb => { cb(msg) })
     }
 
 }
