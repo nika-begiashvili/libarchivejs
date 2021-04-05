@@ -37,7 +37,7 @@ export class Archive{
     constructor(file,options){
         this._worker = new Worker(options.workerUrl);
         this._worker.addEventListener('message', this._workerMsg.bind(this));
-        this._callbacks = [];
+        this._callbacks = new Set();
         this._content = {};
         this._processed = 0;
         this._file = file;
@@ -214,11 +214,15 @@ export class Archive{
     _postMessage(msg,callback){
         this._worker.postMessage(msg);
         return new Promise((resolve,reject) => {
-            this._callbacks.push( this._msgHandler.bind(this,callback,resolve,reject) );
+            this._callbacks.add( this._msgHandler.bind(this,callback,resolve,reject) );
         });
     }
 
-    _msgHandler(callback,resolve,reject,msg){
+    _msgHandler(callback,_resolve,reject,msg){
+        const resolve = () => {
+            this._callbacks.delete(callback)
+            _resolve()
+        }
         if( msg.type === 'BUSY' ){
             reject('worker is busy');
         }else if( msg.type === 'ERROR' ){
@@ -229,11 +233,7 @@ export class Archive{
     }
 
     _workerMsg({data: msg}){
-        const callback = this._callbacks[this._callbacks.length -1];
-        const next = callback(msg);
-        if( !next ){
-            this._callbacks.pop();
-        }
+        this._callbacks.forEach(cb => { cb() })
     }
 
 }
