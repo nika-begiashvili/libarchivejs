@@ -124,3 +124,4 @@ Libarchivejs is a port of the popular [libarchive](https://github.com/libarchive
 Only when you actually open archive file will the web worker be spawned and WASM module will be downloaded. Each `Archive.open` call corresponds to each WebWorker.
 
 After calling an `extractFiles` worker, it will be terminated to free up memory. The client will still work with cached data.
+
