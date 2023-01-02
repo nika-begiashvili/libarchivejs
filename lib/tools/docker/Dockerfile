@@ -1,14 +1,14 @@
-FROM trzeci/emscripten
+FROM trzeci/emscripten:1.39.4-ubuntu
 
 WORKDIR /opt
 
-ADD https://github.com/libarchive/libarchive/releases/download/v3.4.0/libarchive-3.4.0.zip /opt
+ADD https://github.com/libarchive/libarchive/releases/download/v3.6.2/libarchive-3.6.2.zip /opt
 ADD https://github.com/madler/zlib/archive/v1.2.11.zip /opt
 ADD https://netix.dl.sourceforge.net/project/lzmautils/xz-5.2.4.tar.gz /opt
 ADD https://netix.dl.sourceforge.net/project/bzip2/bzip2-1.0.6.tar.gz /opt
 ADD https://www.openssl.org/source/openssl-1.0.2s.tar.gz /opt
 
-RUN unzip /opt/libarchive-3.4.0.zip && rm /opt/libarchive-3.4.0.zip && \
+RUN unzip /opt/libarchive-3.6.2.zip && rm /opt/libarchive-3.6.2.zip && \
     unzip /opt/v1.2.11.zip && rm /opt/v1.2.11.zip && \
     tar xf /opt/xz-5.2.4.tar.gz && rm /opt/xz-5.2.4.tar.gz && \
     tar xf /opt/bzip2-1.0.6.tar.gz && rm /opt/bzip2-1.0.6.tar.gz && \
@@ -24,7 +24,8 @@ ENV LDFLAGS "-L/usr/local/lib"
 # compile openSSL to LLVM
 WORKDIR /opt/openssl-1.0.2s
 RUN cd /opt/openssl-1.0.2s && emmake bash -c "./Configure -no-asm -no-apps no-ssl2 no-ssl3 no-hw no-deprecated shared no-dso linux-generic32" && \
-    sed -i 's/CC= $(CROSS_COMPILE)\/emsdk_portable\/sdk\/emcc/CC= $(CROSS_COMPILE)cc/' Makefile && \
+    sed -i 's/CC= $(CROSS_COMPILE)\/emsdk_portable\/emscripten\/tag-1.39.4\/emcc/CC= $(CROSS_COMPILE)cc/' Makefile && \
+    sed -i 's/-Bsymbolic/ /' Makefile.shared && \
     emmake make && \
     cd /usr/local/lib && \
     ln -s /opt/openssl-1.0.2s/libssl.a && \
@@ -36,8 +37,8 @@ RUN cd /opt/xz-5.2.4 && emconfigure ./configure --disable-assembler --enable-thr
     emmake make 2>&1 | tee make.out && emmake make install
 
 # compile libarchive to LLVM
-WORKDIR /opt/libarchive-3.4.0
-RUN cd /opt/libarchive-3.4.0 && emconfigure ./configure --enable-static --disable-shared --enable-bsdtar=static --enable-bsdcat=static \
+WORKDIR /opt/libarchive-3.6.2
+RUN cd /opt/libarchive-3.6.2 && emconfigure ./configure --enable-static --disable-shared --enable-bsdtar=static --enable-bsdcat=static \
     --enable-bsdcpio=static --enable-posix-regex-lib=libc \
     --disable-xattr --disable-acl --without-nettle --without-lzo2 \
     --without-cng  --without-lz4 \
