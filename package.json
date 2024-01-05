@@ -28,6 +28,7 @@
   "license": "MIT",
   "devDependencies": {
     "eslint": "^6.8.0",
+    "is-wsl": "^3.1.0",
     "jest": "^24.9.0",
     "prettier": "3.1.1",
     "puppeteer": "^1.20.0",
