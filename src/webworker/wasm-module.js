@@ -38,8 +38,8 @@ export class WasmModule {
       closeArchive: this.cwrap("archive_close", null, ["number"]),
       // la_int64_t archive_entry_size( struct archive_entry * )
       getEntrySize: this.cwrap("archive_entry_size", "number", ["number"]),
-      // const char * archive_entry_pathname( struct archive_entry * )
-      getEntryName: this.cwrap("archive_entry_pathname", "string", ["number"]),
+      // const char * archive_entry_pathname_utf8( struct archive_entry * )
+      getEntryName: this.cwrap("archive_entry_pathname_utf8", "string", ["number"]),
       // __LA_MODE_T archive_entry_filetype( struct archive_entry * )
       /*
             #define AE_IFMT		((__LA_MODE_T)0170000)
@@ -98,7 +98,7 @@ export class WasmModule {
   monitorRunDependencies() {}
 
   locateFile(path /* ,prefix */) {
-    return `wasm-gen/${path}`;
+    return `${path}`;
   }
 }
 

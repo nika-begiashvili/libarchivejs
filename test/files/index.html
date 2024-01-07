@@ -54,10 +54,10 @@
         return obj;
       }
 
-      import { Archive } from "../../src/libarchive.js";
+      import { Archive } from "/dist/libarchive.js";
 
       Archive.init({
-        workerUrl: "../../dist/worker-bundle.js",
+        workerUrl: "/dist/worker-bundle.js",
       });
 
       window.Archive = Archive;

@@ -29,7 +29,7 @@ export class ArchiveReader {
       console.warn("Closing previous file");
       this.close();
     }
-    const { promise, resolve, reject } = this._promiseHandles();
+    const { promise, resolve, reject } = Promise.withResolvers();
     this._file = file;
     const reader = new FileReader();
     reader.onload = () => this._loadFile(reader.result, resolve, reject);
@@ -71,7 +71,7 @@ export class ArchiveReader {
 
   /**
    * set passphrase to be used with archive
-   * @param {*} passphrase
+   * @param {string} passphrase
    */
   setPassphrase(passphrase) {
     this._passphrase = passphrase;
@@ -80,7 +80,7 @@ export class ArchiveReader {
   /**
    * get archive entries
    * @param {boolean} skipExtraction
-   * @param {string} except don't skip this entry
+   * @param {string} except don't skip extraction for this entry
    */
   *entries(skipExtraction = false, except = null) {
     this._archive = this._runCode.openArchive(
@@ -134,13 +134,4 @@ export class ArchiveReader {
     }
   }
 
-  _promiseHandles() {
-    let resolve = null,
-      reject = null;
-    const promise = new Promise((_resolve, _reject) => {
-      resolve = _resolve;
-      reject = _reject;
-    });
-    return { promise, resolve, reject };
-  }
 }

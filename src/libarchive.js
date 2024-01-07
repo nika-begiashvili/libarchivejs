@@ -1,4 +1,5 @@
 import { CompressedFile } from "./compressed-file.js";
+import * as Comlink from "comlink/dist/esm/comlink.mjs";
 
 export class Archive {
   /**
@@ -7,7 +8,7 @@ export class Archive {
    */
   static init(options = {}) {
     Archive._options = {
-      workerUrl: "../dist/worker-bundle.js",
+      workerUrl: options.workerUrl || new URL("./worker-bundle.js", import.meta.url),
       ...options,
     };
     return Archive._options;
@@ -20,14 +21,9 @@ export class Archive {
    * @returns {Archive}
    */
   static open(file, options = null) {
-    options =
-      options ||
+    options = options ||
       Archive._options ||
-      (Archive.init() &&
-        console.warn(
-          "Automatically initializing using options: ",
-          Archive._options,
-        ));
+      Archive.init();
     const arch = new Archive(file, options);
     return arch.open();
   }
@@ -38,82 +34,83 @@ export class Archive {
    * @param {Object} options
    */
   constructor(file, options) {
-    this._worker = new Worker(options.workerUrl);
-    this._worker.addEventListener("message", this._workerMsg.bind(this));
+    this._worker = new Worker(options.workerUrl, {
+      type: "module",
+    });
+
     this._callbacks = [];
     this._content = {};
     this._processed = 0;
     this._file = file;
   }
 
+  async getClient() {
+    if (!this._client) {
+      const Client = Comlink.wrap(this._worker);
+      let { promise, resolve } = Promise.withResolvers();
+      this._client = await new Client(Comlink.proxy(() => {
+        resolve();
+      }));
+      await promise;
+    }
+
+    return this._client;
+  }
+
   /**
    * Prepares file for reading
    * @returns {Promise<Archive>} archive instance
    */
-  async open() {
-    await this._postMessage({ type: "HELLO" }, (resolve, reject, msg) => {
-      if (msg.type === "READY") {
-        resolve();
-      }
+  open() {
+    return new Promise((resolve, _) => {
+        this.getClient().then((client) => {
+          client.open(this._file, Comlink.proxy(() => {
+            resolve(this);
+          }));
+        });
     });
-    return await this._postMessage(
-      { type: "OPEN", file: this._file },
-      (resolve, reject, msg) => {
-        if (msg.type === "OPENED") {
-          resolve(this);
-        }
-      },
-    );
   }
 
   /**
    * Terminate worker to free up memory
    */
-  close() {
+  async close() {
     this._worker.terminate();
     this._worker = null;
+    this._client = null;
+    this._file = null;
   }
 
   /**
    * detect if archive has encrypted data
    * @returns {boolean|null} null if could not be determined
    */
-  hasEncryptedData() {
-    return this._postMessage(
-      { type: "CHECK_ENCRYPTION" },
-      (resolve, reject, msg) => {
-        if (msg.type === "ENCRYPTION_STATUS") {
-          resolve(msg.status);
-        }
-      },
-    );
+  async hasEncryptedData() {
+    const client = await this.getClient();
+    return await client.hasEncryptedData();
   }
 
   /**
    * set password to be used when reading archive
    */
-  usePassword(archivePassword) {
-    return this._postMessage(
-      { type: "SET_PASSPHRASE", passphrase: archivePassword },
-      (resolve, reject, msg) => {
-        if (msg.type === "PASSPHRASE_STATUS") {
-          resolve(msg.status);
-        }
-      },
-    );
+  async usePassword(archivePassword) {
+    const client = await this.getClient();
+    await client.usePassword(archivePassword);
   }
 
   /**
    * Returns object containing directory structure and file information
    * @returns {Promise<object>}
    */
-  getFilesObject() {
+  async getFilesObject() {
     if (this._processed > 0) {
       return Promise.resolve().then(() => this._content);
     }
-    return this._postMessage({ type: "LIST_FILES" }, (resolve, reject, msg) => {
-      if (msg.type === "ENTRY") {
-        const entry = msg.entry;
+    const client = await this.getClient();
+    const files = await client.listFiles();
+
+    files.forEach(
+      (entry) => {
         const [target, prop] = this._getProp(this._content, entry.path);
         if (entry.type === "FILE") {
           target[prop] = new CompressedFile(
@@ -123,12 +120,11 @@ export class Archive {
             this,
           );
         }
-        return true;
-      } else if (msg.type === "END") {
-        this._processed = 1;
-        resolve(this._cloneContent(this._content));
-      }
-    });
+      },
+    );
+
+    this._processed = 1;
+    return this._cloneContent(this._content);
   }
 
   getFilesArray() {
@@ -137,23 +133,17 @@ export class Archive {
     });
   }
 
-  extractSingleFile(target) {
+  async extractSingleFile(target) {
     // Prevent extraction if worker already terminated
     if (this._worker === null) {
       throw new Error("Archive already closed");
     }
 
-    return this._postMessage(
-      { type: "EXTRACT_SINGLE_FILE", target: target },
-      (resolve, reject, msg) => {
-        if (msg.type === "FILE") {
-          const file = new File([msg.entry.fileData], msg.entry.fileName, {
-            type: "application/octet-stream",
-          });
-          resolve(file);
-        }
-      },
-    );
+    const client = await this.getClient();
+    const fileEntry = await client.extractSingleFile(target);
+    return new File([fileEntry.fileData], fileEntry.fileName, {
+      type: "application/octet-stream",
+    });;
   }
 
   /**
@@ -161,36 +151,33 @@ export class Archive {
    * @param {Function} extractCallback
    *
    */
-  extractFiles(extractCallback) {
+  async extractFiles(extractCallback) {
     if (this._processed > 1) {
       return Promise.resolve().then(() => this._content);
     }
-    return this._postMessage(
-      { type: "EXTRACT_FILES" },
-      (resolve, reject, msg) => {
-        if (msg.type === "ENTRY") {
-          const [target, prop] = this._getProp(this._content, msg.entry.path);
-          if (msg.entry.type === "FILE") {
-            target[prop] = new File([msg.entry.fileData], msg.entry.fileName, {
-              type: "application/octet-stream",
-            });
-            if (extractCallback !== undefined) {
-              setTimeout(
-                extractCallback.bind(null, {
-                  file: target[prop],
-                  path: msg.entry.path,
-                }),
-              );
-            }
-          }
-          return true;
-        } else if (msg.type === "END") {
-          this._processed = 2;
-          this._worker.terminate();
-          resolve(this._cloneContent(this._content));
+    const client = await this.getClient();
+    const files = await client.extractFiles();
+
+    files.forEach( (entry) => {
+      const [target, prop] = this._getProp(this._content, entry.path);
+      if (entry.type === "FILE") {
+        target[prop] = new File([entry.fileData], entry.fileName, {
+          type: "application/octet-stream",
+        });
+        if (extractCallback !== undefined) {
+          setTimeout(
+            extractCallback.bind(null, {
+              file: target[prop],
+              path: entry.path,
+            }),
+          );
         }
-      },
-    );
+      }
+    });
+
+    this._processed = 2;
+    this._worker.terminate();
+    return this._cloneContent(this._content);
   }
 
   _cloneContent(obj) {
@@ -235,30 +222,4 @@ export class Archive {
     return [prev, parts[parts.length - 1]];
   }
 
-  _postMessage(msg, callback) {
-    this._worker.postMessage(msg);
-    return new Promise((resolve, reject) => {
-      this._callbacks.push(
-        this._msgHandler.bind(this, callback, resolve, reject),
-      );
-    });
-  }
-
-  _msgHandler(callback, resolve, reject, msg) {
-    if (msg.type === "BUSY") {
-      reject("worker is busy");
-    } else if (msg.type === "ERROR") {
-      reject(msg.error);
-    } else {
-      return callback(resolve, reject, msg);
-    }
-  }
-
-  _workerMsg({ data: msg }) {
-    const callback = this._callbacks[this._callbacks.length - 1];
-    const next = callback(msg);
-    if (!next) {
-      this._callbacks.pop();
-    }
-  }
 }

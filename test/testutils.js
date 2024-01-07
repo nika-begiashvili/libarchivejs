@@ -21,6 +21,7 @@ const startServer = () =>
 module.exports = {
   setup: async () => {
     let browser = await puppeteer.launch({
+      headless: "new",
       executablePath: "google-chrome",
       args: ["--no-sandbox"],
     });
