@@ -1,8 +1,16 @@
+import { Archive } from "./libarchive";
+
 /**
  * Represents compressed file before extraction
  */
 export class CompressedFile {
-  constructor(name, size, path, lastModified, archiveRef) {
+  constructor(
+    name: string,
+    size: number,
+    path: string,
+    lastModified: number,
+    archiveRef: Archive,
+  ) {
     this._name = name;
     this._size = size;
     this._path = path;
@@ -10,22 +18,28 @@ export class CompressedFile {
     this._archiveRef = archiveRef;
   }
 
+  private _name: string;
+  private _size: number;
+  private _path: string;
+  private _lastModified: number;
+  private _archiveRef: any;
+
   /**
-   * file name
+   * File name
    */
   get name() {
     return this._name;
   }
   /**
-   * file size
+   * File size
    */
   get size() {
     return this._size;
   }
 
   /*
-    * Last modified epoch seconds
-    */
+   * Last modified nano seconds
+   */
   get lastModified() {
     return this._lastModified;
   }

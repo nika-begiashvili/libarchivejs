@@ -5,19 +5,18 @@ import * as Comlink from "comlink/dist/esm/comlink.mjs";
 let reader = null;
 
 class LibArchiveWorker {
-
   constructor(readyCallback) {
     LibArchiveWorker.readyCallback = readyCallback;
   }
 
   open(file, cb) {
-    reader.open(file).then(() => cb())
+    reader.open(file).then(() => cb());
   }
 
   listFiles() {
     let arr = [];
     for (const entry of reader.entries(true)) {
-      arr.push(entry)
+      arr.push(entry);
     }
     return arr;
   }
@@ -25,7 +24,7 @@ class LibArchiveWorker {
   extractFiles() {
     let arr = [];
     for (const entry of reader.entries(false)) {
-      arr.push(entry)
+      arr.push(entry);
     }
     return arr;
   }

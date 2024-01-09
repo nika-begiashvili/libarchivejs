@@ -81,7 +81,7 @@ export class ArchiveReader {
 
   /**
    * Set locale, defaults to: en_US.UTF-8
-   * @param {string} locale 
+   * @param {string} locale
    */
   setLocale(locale) {
     this._locale = locale;
@@ -145,5 +145,4 @@ export class ArchiveReader {
       reject(error);
     }
   }
-
 }

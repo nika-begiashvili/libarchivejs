@@ -31,7 +31,7 @@ describe("extract various compression types", () => {
     const checksums = await response(page);
     expect(checksums[0]).toEqual(checksum[".gitignore"]);
     expect(checksums[1]).toEqual(checksum["README.md"]);
-    expect(checksums[2]).toEqual(checksum['addon']['addon.py']);
+    expect(checksums[2]).toEqual(checksum["addon"]["addon.py"]);
   }, 16000);
 
   test("extract encrypted zip", async () => {

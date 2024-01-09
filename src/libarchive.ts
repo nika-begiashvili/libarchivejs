@@ -1,18 +1,40 @@
 import { CompressedFile } from "./compressed-file.js";
-import * as Comlink from "comlink/dist/esm/comlink.mjs";
+import * as Comlink from "comlink";
+
+type ArchiveOptions = {
+  workerUrl: string | URL;
+};
+
+type ArchiveEntry = {
+  size: number;
+  path: string;
+  type: string;
+  lastModified: number;
+  fileData: ArrayBuffer;
+  fileName: string;
+};
 
 export class Archive {
+  private static _options: ArchiveOptions;
+
   /**
    * Initialize libarchivejs
    * @param {Object} options
    */
-  static init(options = {}) {
+  static init(options: ArchiveOptions | null = null) {
     Archive._options = {
-      workerUrl: options.workerUrl || new URL("./worker-bundle.js", import.meta.url),
+      workerUrl:
+        options?.workerUrl || new URL("./worker-bundle.js", import.meta.url),
       ...options,
     };
     return Archive._options;
   }
+
+  private _worker: Worker | null;
+  private _content: any;
+  private _processed: number;
+  private _file: File | null;
+  private _client: any;
 
   /**
    * Creates new archive instance from browser native File object
@@ -20,10 +42,8 @@ export class Archive {
    * @param {object} options
    * @returns {Archive}
    */
-  static open(file, options = null) {
-    options = options ||
-      Archive._options ||
-      Archive.init();
+  static open(file: File, options: ArchiveOptions | null = null) {
+    options = options || Archive._options || Archive.init();
     const arch = new Archive(file, options);
     return arch.open();
   }
@@ -33,12 +53,11 @@ export class Archive {
    * @param {File} file
    * @param {Object} options
    */
-  constructor(file, options) {
+  constructor(file: File, options: ArchiveOptions) {
     this._worker = new Worker(options.workerUrl, {
       type: "module",
     });
 
-    this._callbacks = [];
     this._content = {};
     this._processed = 0;
     this._file = file;
@@ -46,11 +65,14 @@ export class Archive {
 
   async getClient() {
     if (!this._client) {
-      const Client = Comlink.wrap(this._worker);
+      const Client = Comlink.wrap(this._worker as any) as any;
+      // @ts-ignore - Promise.WithResolvers
       let { promise, resolve } = Promise.withResolvers();
-      this._client = await new Client(Comlink.proxy(() => {
-        resolve();
-      }));
+      this._client = await new Client(
+        Comlink.proxy(() => {
+          resolve();
+        }),
+      );
       await promise;
     }
 
@@ -63,11 +85,14 @@ export class Archive {
    */
   open() {
     return new Promise((resolve, _) => {
-        this.getClient().then((client) => {
-          client.open(this._file, Comlink.proxy(() => {
+      this.getClient().then((client) => {
+        client.open(
+          this._file,
+          Comlink.proxy(() => {
             resolve(this);
-          }));
-        });
+          }),
+        );
+      });
     });
   }
 
@@ -75,7 +100,7 @@ export class Archive {
    * Terminate worker to free up memory
    */
   async close() {
-    this._worker.terminate();
+    this._worker?.terminate();
     this._worker = null;
     this._client = null;
     this._file = null;
@@ -93,7 +118,7 @@ export class Archive {
   /**
    * set password to be used when reading archive
    */
-  async usePassword(archivePassword) {
+  async usePassword(archivePassword: string) {
     const client = await this.getClient();
     await client.usePassword(archivePassword);
   }
@@ -101,7 +126,7 @@ export class Archive {
   /**
    * Set locale, defaults to en_US.UTF-8
    */
-  async setLocale(locale) {
+  async setLocale(locale: string) {
     const client = await this.getClient();
     await client.setLocale(locale);
   }
@@ -117,20 +142,18 @@ export class Archive {
     const client = await this.getClient();
     const files = await client.listFiles();
 
-    files.forEach(
-      (entry) => {
-        const [target, prop] = this._getProp(this._content, entry.path);
-        if (entry.type === "FILE") {
-          target[prop] = new CompressedFile(
-            entry.fileName,
-            entry.size,
-            entry.path,
-            entry.lastModified,
-            this,
-          );
-        }
-      },
-    );
+    files.forEach((entry: ArchiveEntry) => {
+      const [target, prop] = this._getProp(this._content, entry.path);
+      if (entry.type === "FILE") {
+        target[prop] = new CompressedFile(
+          entry.fileName,
+          entry.size,
+          entry.path,
+          entry.lastModified,
+          this,
+        );
+      }
+    });
 
     this._processed = 1;
     return this._cloneContent(this._content);
@@ -142,7 +165,7 @@ export class Archive {
     });
   }
 
-  async extractSingleFile(target) {
+  async extractSingleFile(target: string) {
     // Prevent extraction if worker already terminated
     if (this._worker === null) {
       throw new Error("Archive already closed");
@@ -153,7 +176,7 @@ export class Archive {
     return new File([fileEntry.fileData], fileEntry.fileName, {
       type: "application/octet-stream",
       lastModified: fileEntry.lastModified / 1_000_000,
-    });;
+    });
   }
 
   /**
@@ -161,14 +184,14 @@ export class Archive {
    * @param {Function} extractCallback
    *
    */
-  async extractFiles(extractCallback) {
+  async extractFiles(extractCallback: Function | undefined = undefined) {
     if (this._processed > 1) {
       return Promise.resolve().then(() => this._content);
     }
     const client = await this.getClient();
     const files = await client.extractFiles();
 
-    files.forEach( (entry) => {
+    files.forEach((entry: ArchiveEntry) => {
       const [target, prop] = this._getProp(this._content, entry.path);
       if (entry.type === "FILE") {
         target[prop] = new File([entry.fileData], entry.fileName, {
@@ -186,22 +209,22 @@ export class Archive {
     });
 
     this._processed = 2;
-    this._worker.terminate();
+    this._worker?.terminate();
     return this._cloneContent(this._content);
   }
 
-  _cloneContent(obj) {
+  _cloneContent(obj: any) {
     if (obj instanceof File || obj instanceof CompressedFile || obj === null)
       return obj;
-    const o = {};
+    const o: any = {};
     for (const prop of Object.keys(obj)) {
       o[prop] = this._cloneContent(obj[prop]);
     }
     return o;
   }
 
-  _objectToArray(obj, path = "") {
-    const files = [];
+  _objectToArray(obj: any, path: string = "") {
+    const files: any[] = [];
     for (const key of Object.keys(obj)) {
       if (
         obj[key] instanceof File ||
@@ -219,7 +242,7 @@ export class Archive {
     return files;
   }
 
-  _getProp(obj, path) {
+  _getProp(obj: any, path: string) {
     const parts = path.split("/");
     if (parts[parts.length - 1] === "") parts.pop();
     let cur = obj,
@@ -231,5 +254,4 @@ export class Archive {
     }
     return [prev, parts[parts.length - 1]];
   }
-
 }

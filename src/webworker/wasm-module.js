@@ -26,7 +26,7 @@ export class WasmModule {
         "number",
         "number",
         "string",
-        "string"
+        "string",
       ]),
       // void * get_entry(void * archive)
       // return archive entry pointer
@@ -54,7 +54,9 @@ export class WasmModule {
             */
       getEntryType: this.cwrap("archive_entry_filetype", "number", ["number"]),
       // long		 archive_entry_mtime_nsec(struct archive_entry *);
-      getEntryLastModified: this.cwrap("_archive_entry_mtime_nsec", "number", ["number"]),
+      getEntryLastModified: this.cwrap("archive_entry_mtime_nsec", "number", [
+        "number",
+      ]),
       // const char * archive_error_string(struct archive *);
       getError: this.cwrap("archive_error_string", "string", ["number"]),
 
