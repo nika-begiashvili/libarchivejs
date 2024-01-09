@@ -8,6 +8,8 @@
     "_archive_entry_pathname", 
     "_archive_entry_pathname_utf8", 
     "_archive_entry_size", 
+    "_archive_entry_mtime_nsec",
+    "_archive_entry_birthtime_nsec",
     "_archive_read_data_skip", 
     "_archive_error_string", 
     "_archive_entry_is_encrypted", 

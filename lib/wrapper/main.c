@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <locale.h>
 #include <archive.h>
 #include <archive_entry.h>
 #define EMSCRIPTEN_KEEPALIVE 
@@ -13,9 +14,11 @@ const char * get_version(){
 }
 
 EMSCRIPTEN_KEEPALIVE
-void* archive_open( const void *buf, size_t size, const char * passphrase ){
+void* archive_open( const void *buf, size_t size, const char * passphrase, const char * locale){
   struct archive *a;
   int r;
+
+  setlocale(LC_ALL, locale);
 
   a = archive_read_new();
   archive_read_support_filter_all(a);

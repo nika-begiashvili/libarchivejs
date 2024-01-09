@@ -46,6 +46,10 @@ class LibArchiveWorker {
     reader.setPassphrase(passphrase);
   }
 
+  setLocale(locale) {
+    reader.setLocale(locale);
+  }
+
   close() {
     reader.close();
   }

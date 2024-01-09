@@ -18,6 +18,7 @@ export class ArchiveReader {
     this._runCode = wasmModule.runCode;
     this._file = null;
     this._passphrase = null;
+    this._locale = "en_US.UTF-8";
   }
 
   /**
@@ -57,6 +58,7 @@ export class ArchiveReader {
       this._filePtr,
       this._fileLength,
       this._passphrase,
+      this._locale,
     );
     this._runCode.getNextEntry(this._archive);
     const status = this._runCode.hasEncryptedEntries(this._archive);
@@ -78,6 +80,14 @@ export class ArchiveReader {
   }
 
   /**
+   * Set locale, defaults to: en_US.UTF-8
+   * @param {string} locale 
+   */
+  setLocale(locale) {
+    this._locale = locale;
+  }
+
+  /**
    * get archive entries
    * @param {boolean} skipExtraction
    * @param {string} except don't skip extraction for this entry
@@ -87,6 +97,7 @@ export class ArchiveReader {
       this._filePtr,
       this._fileLength,
       this._passphrase,
+      this._locale,
     );
     let entry;
     while (true) {
@@ -97,6 +108,7 @@ export class ArchiveReader {
         size: this._runCode.getEntrySize(entry),
         path: this._runCode.getEntryName(entry),
         type: TYPE_MAP[this._runCode.getEntryType(entry)],
+        lastModified: this._runCode.getEntryLastModified(entry),
         ref: entry,
       };
 

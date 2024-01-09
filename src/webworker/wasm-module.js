@@ -20,12 +20,13 @@ export class WasmModule {
     this.runCode = {
       // const char * get_version()
       getVersion: this.cwrap("get_version", "string", []),
-      // void * archive_open( const void * buffer, size_t buffer_size)
+      // void * void* archive_open( const void *buf, size_t size, const char * passphrase, const char * locale)
       // retuns archive pointer
       openArchive: this.cwrap("archive_open", "number", [
         "number",
         "number",
         "string",
+        "string"
       ]),
       // void * get_entry(void * archive)
       // return archive entry pointer
@@ -39,7 +40,7 @@ export class WasmModule {
       // la_int64_t archive_entry_size( struct archive_entry * )
       getEntrySize: this.cwrap("archive_entry_size", "number", ["number"]),
       // const char * archive_entry_pathname_utf8( struct archive_entry * )
-      getEntryName: this.cwrap("archive_entry_pathname_utf8", "string", ["number"]),
+      getEntryName: this.cwrap("archive_entry_pathname", "string", ["number"]),
       // __LA_MODE_T archive_entry_filetype( struct archive_entry * )
       /*
             #define AE_IFMT		((__LA_MODE_T)0170000)
@@ -52,6 +53,8 @@ export class WasmModule {
             #define AE_IFIFO	((__LA_MODE_T)0010000) // Named pipe
             */
       getEntryType: this.cwrap("archive_entry_filetype", "number", ["number"]),
+      // long		 archive_entry_mtime_nsec(struct archive_entry *);
+      getEntryLastModified: this.cwrap("_archive_entry_mtime_nsec", "number", ["number"]),
       // const char * archive_error_string(struct archive *);
       getError: this.cwrap("archive_error_string", "string", ["number"]),
 

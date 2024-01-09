@@ -466,6 +466,14 @@ class Archive {
   }
 
   /**
+   * Set locale, defaults to en_US.UTF-8
+   */
+  async setLocale(locale) {
+    const client = await this.getClient();
+    await client.setLocale(locale);
+  }
+
+  /**
    * Returns object containing directory structure and file information
    * @returns {Promise<object>}
    */
@@ -588,32 +596,6 @@ class Archive {
     return [prev, parts[parts.length - 1]];
   }
 
-  _postMessage(msg, callback) {
-    this._worker.postMessage(msg);
-    return new Promise((resolve, reject) => {
-      this._callbacks.push(
-        this._msgHandler.bind(this, callback, resolve, reject),
-      );
-    });
-  }
-
-  _msgHandler(callback, resolve, reject, msg) {
-    if (msg.type === "BUSY") {
-      reject("worker is busy");
-    } else if (msg.type === "ERROR") {
-      reject(msg.error);
-    } else {
-      return callback(resolve, reject, msg);
-    }
-  }
-
-  _workerMsg({ data: msg }) {
-    const callback = this._callbacks[this._callbacks.length - 1];
-    const next = callback(msg);
-    if (!next) {
-      this._callbacks.pop();
-    }
-  }
 }
 
 export { Archive };

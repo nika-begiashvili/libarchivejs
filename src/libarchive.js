@@ -99,6 +99,14 @@ export class Archive {
   }
 
   /**
+   * Set locale, defaults to en_US.UTF-8
+   */
+  async setLocale(locale) {
+    const client = await this.getClient();
+    await client.setLocale(locale);
+  }
+
+  /**
    * Returns object containing directory structure and file information
    * @returns {Promise<object>}
    */
@@ -117,6 +125,7 @@ export class Archive {
             entry.fileName,
             entry.size,
             entry.path,
+            entry.lastModified,
             this,
           );
         }
@@ -143,6 +152,7 @@ export class Archive {
     const fileEntry = await client.extractSingleFile(target);
     return new File([fileEntry.fileData], fileEntry.fileName, {
       type: "application/octet-stream",
+      lastModified: fileEntry.lastModified / 1_000_000,
     });;
   }
 

@@ -28,8 +28,10 @@ describe("extract various compression types", () => {
   test("extract single file from zip", async () => {
     await navigate(page, "test-single.html");
     await inputFile("archives/test.zip", page);
-    const file = await response(page);
-    expect(file).toEqual(checksum[".gitignore"]);
+    const checksums = await response(page);
+    expect(checksums[0]).toEqual(checksum[".gitignore"]);
+    expect(checksums[1]).toEqual(checksum["README.md"]);
+    expect(checksums[2]).toEqual(checksum['addon']['addon.py']);
   }, 16000);
 
   test("extract encrypted zip", async () => {
