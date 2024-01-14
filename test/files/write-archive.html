@@ -3,6 +3,7 @@
   <head>
     <title>test webworker</title>
   </head>
+
   <body>
     <input type="file" id="file" />
     <script type="module">
@@ -44,6 +45,19 @@
         document.body.appendChild(d);
       }
 
+      function download(file) {
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(file);
+
+        link.href = url;
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
+
       async function fileChecksums(obj) {
         for (const [key, val] of Object.entries(obj)) {
           obj[key] =
@@ -54,7 +68,11 @@
         return obj;
       }
 
-      import { Archive } from "/dist/libarchive.js";
+      import {
+        Archive,
+        ArchiveCompression,
+        ArchiveFormat,
+      } from "/dist/libarchive.js";
 
       Archive.init({
         workerUrl: "/dist/worker-bundle.js",
@@ -66,13 +84,20 @@
         let obj = null;
         try {
           const file = e.currentTarget.files[0];
-          const archive = await Archive.open(file);
-          //console.log(await archive.getFilesObject());
-          //console.log( await archive.getFilesArray() );
+          const archiveFile = await Archive.write({
+            files: [{ file }],
+            outputFileName: "test.tar.gz",
+            compression: ArchiveCompression.GZIP,
+            format: ArchiveFormat.USTAR,
+            passphrase: null,
+          });
+
+          const archive = await Archive.open(archiveFile);
+          //console.log(await archive.getFilesArray());
           obj = await archive.extractFiles();
-          //console.log(await archive.getFilesObject());
-          //console.log( await archive.getFilesArray() );
+          console.log(await archive.getFilesObject());
           obj = await fileChecksums(obj);
+          console.log(obj);
         } catch (err) {
           console.error(err);
         } finally {

@@ -1,5 +1,26 @@
-type ArchiveOptions = {
+import { ArchiveCompression, ArchiveFormat } from "./formats.js";
+export { ArchiveCompression, ArchiveFormat } from "./formats.js";
+export type ArchiveOptions = {
     workerUrl: string | URL;
+};
+export type ArchiveEntry = {
+    size: number;
+    path: string;
+    type: string;
+    lastModified: number;
+    fileData: ArrayBuffer;
+    fileName: string;
+};
+export type ArchiveEntryFile = {
+    file: ArchiveEntryFile;
+    pathname?: string;
+};
+export type ArchiveWriteOptions = {
+    files: ArchiveEntryFile[];
+    outputFileName: string;
+    compression: ArchiveCompression;
+    format: ArchiveFormat;
+    passphrase: string | null;
 };
 export declare class Archive {
     private static _options;
@@ -13,25 +34,26 @@ export declare class Archive {
     private _processed;
     private _file;
     private _client;
+    static write({ files, outputFileName, compression, format, passphrase }: ArchiveWriteOptions): Promise<File>;
     /**
      * Creates new archive instance from browser native File object
      * @param {File} file
      * @param {object} options
      * @returns {Archive}
      */
-    static open(file: File, options?: ArchiveOptions | null): Promise<unknown>;
+    static open(file: File, options?: ArchiveOptions | null): Promise<Archive>;
     /**
      * Create new archive
      * @param {File} file
      * @param {Object} options
      */
     constructor(file: File, options: ArchiveOptions);
-    getClient(): Promise<any>;
+    private getClient;
     /**
      * Prepares file for reading
      * @returns {Promise<Archive>} archive instance
      */
-    open(): Promise<unknown>;
+    open(): Promise<Archive>;
     /**
      * Terminate worker to free up memory
      */
@@ -40,7 +62,7 @@ export declare class Archive {
      * detect if archive has encrypted data
      * @returns {boolean|null} null if could not be determined
      */
-    hasEncryptedData(): Promise<any>;
+    hasEncryptedData(): Promise<boolean | null>;
     /**
      * set password to be used when reading archive
      */
@@ -62,8 +84,4 @@ export declare class Archive {
      *
      */
     extractFiles(extractCallback?: Function | undefined): Promise<any>;
-    _cloneContent(obj: any): any;
-    _objectToArray(obj: any, path?: string): any[];
-    _getProp(obj: any, path: string): any[];
 }
-export {};

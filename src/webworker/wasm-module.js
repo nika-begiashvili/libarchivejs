@@ -57,8 +57,35 @@ export class WasmModule {
       getEntryLastModified: this.cwrap("archive_entry_mtime_nsec", "number", [
         "number",
       ]),
+
       // const char * archive_error_string(struct archive *);
       getError: this.cwrap("archive_error_string", "string", ["number"]),
+
+      // void *start_archive_write(char *filter, char *format, void *buff, size_t buffsize, size_t *outputsize, char *passphrase)
+      startArchiveWrite: this.cwrap("start_archive_write", "number", [
+        "string",
+        "string",
+        "number",
+        "number",
+        "number",
+        "string",
+      ]),
+
+      // void write_archive_file( void *a, char *pathname, size_t filesize , char *filedata )
+      writeArchiveFile: this.cwrap("write_archive_file", null, [
+        "number",
+        "string",
+        "number",
+        "number",
+      ]),
+
+      // int archive_write_close(struct archive *);
+      closeArchiveWrite: this.cwrap("archive_write_close", "number", [
+        "number",
+      ]),
+
+      // int archive_write_free(struct archive *);
+      freeArchiveWrite: this.cwrap("archive_write_free", "number", ["number"]),
 
       /*
        * Returns 1 if the archive contains at least one encrypted entry.
@@ -96,6 +123,7 @@ export class WasmModule {
       string: (str) => this.allocate(this.intArrayFromString(str), "i8", 0),
       malloc: this.cwrap("malloc", "number", ["number"]),
       free: this.cwrap("free", null, ["number"]),
+      sizeOfSizeT: this.cwrap("size_of_size_t", "number", []),
     };
     //console.log(this.runCode.getVersion());
   }

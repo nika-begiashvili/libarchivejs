@@ -1,8 +1,10 @@
 import { ArchiveReader } from "./archive-reader";
+import { ArchiveWriter } from "./archive-writer";
 import { getWasmModule } from "./wasm-module";
 import * as Comlink from "comlink/dist/esm/comlink.mjs";
 
 let reader = null;
+let writer = null;
 
 class LibArchiveWorker {
   constructor(readyCallback) {
@@ -49,6 +51,10 @@ class LibArchiveWorker {
     reader.setLocale(locale);
   }
 
+  writeArchive(files, compression, format, passphrase) {
+    return writer.write(files, compression, format, passphrase);
+  }
+
   close() {
     reader.close();
   }
@@ -56,6 +62,7 @@ class LibArchiveWorker {
 
 getWasmModule((wasmModule) => {
   reader = new ArchiveReader(wasmModule);
+  writer = new ArchiveWriter(wasmModule);
   LibArchiveWorker?.readyCallback();
 });
 

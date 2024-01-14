@@ -22,8 +22,8 @@ class CompressedFile {
         return this._size;
     }
     /*
-      * Last modified nano seconds
-      */
+     * Last modified nano seconds
+     */
     get lastModified() {
         return this._lastModified;
     }
@@ -373,6 +373,97 @@ function generateUUID() {
         .join("-");
 }
 
+function cloneContent(obj) {
+    if (obj instanceof File || obj instanceof CompressedFile || obj === null)
+        return obj;
+    const o = {};
+    for (const prop of Object.keys(obj)) {
+        o[prop] = cloneContent(obj[prop]);
+    }
+    return o;
+}
+function objectToArray(obj, path = "") {
+    const files = [];
+    for (const key of Object.keys(obj)) {
+        if (obj[key] instanceof File ||
+            obj[key] instanceof CompressedFile ||
+            obj[key] === null) {
+            files.push({
+                file: obj[key] || key,
+                path: path,
+            });
+        }
+        else {
+            files.push(...objectToArray(obj[key], `${path}${key}/`));
+        }
+    }
+    return files;
+}
+function getObjectPropReference(obj, path) {
+    const parts = path.split("/");
+    if (parts[parts.length - 1] === "")
+        parts.pop();
+    let cur = obj, prev = null;
+    for (const part of parts) {
+        cur[part] = cur[part] || {};
+        prev = cur;
+        cur = cur[part];
+    }
+    return [prev, parts[parts.length - 1]];
+}
+
+var ArchiveFormat;
+(function (ArchiveFormat) {
+    ArchiveFormat["SEVEN_ZIP"] = "7zip";
+    ArchiveFormat["AR"] = "ar";
+    ArchiveFormat["ARBSD"] = "arbsd";
+    ArchiveFormat["ARGNU"] = "argnu";
+    ArchiveFormat["ARSVR4"] = "arsvr4";
+    ArchiveFormat["BIN"] = "bin";
+    ArchiveFormat["BSDTAR"] = "bsdtar";
+    ArchiveFormat["CD9660"] = "cd9660";
+    ArchiveFormat["CPIO"] = "cpio";
+    ArchiveFormat["GNUTAR"] = "gnutar";
+    ArchiveFormat["ISO"] = "iso";
+    ArchiveFormat["ISO9660"] = "iso9660";
+    ArchiveFormat["MTREE"] = "mtree";
+    ArchiveFormat["MTREE_CLASSIC"] = "mtree-classic";
+    ArchiveFormat["NEWC"] = "newc";
+    ArchiveFormat["ODC"] = "odc";
+    ArchiveFormat["OLDTAR"] = "oldtar";
+    ArchiveFormat["PAX"] = "pax";
+    ArchiveFormat["PAXR"] = "paxr";
+    ArchiveFormat["POSIX"] = "posix";
+    ArchiveFormat["PWB"] = "pwb";
+    ArchiveFormat["RAW"] = "raw";
+    ArchiveFormat["RPAX"] = "rpax";
+    ArchiveFormat["SHAR"] = "shar";
+    ArchiveFormat["SHARDUMP"] = "shardump";
+    ArchiveFormat["USTAR"] = "ustar";
+    ArchiveFormat["V7TAR"] = "v7tar";
+    ArchiveFormat["V7"] = "v7";
+    ArchiveFormat["WARC"] = "warc";
+    ArchiveFormat["XAR"] = "xar";
+    ArchiveFormat["ZIP"] = "zip";
+})(ArchiveFormat || (ArchiveFormat = {}));
+var ArchiveCompression;
+(function (ArchiveCompression) {
+    ArchiveCompression["B64ENCODE"] = "b64encode";
+    ArchiveCompression["BZIP2"] = "bzip2";
+    ArchiveCompression["COMPRESS"] = "compress";
+    ArchiveCompression["GRZIP"] = "grzip";
+    ArchiveCompression["GZIP"] = "gzip";
+    ArchiveCompression["LRZIP"] = "lrzip";
+    ArchiveCompression["LZ4"] = "lz4";
+    ArchiveCompression["LZIP"] = "lzip";
+    ArchiveCompression["LZMA"] = "lzma";
+    ArchiveCompression["LZOP"] = "lzop";
+    ArchiveCompression["UUENCODE"] = "uuencode";
+    ArchiveCompression["XZ"] = "xz";
+    ArchiveCompression["ZSTD"] = "zstd";
+    ArchiveCompression["NONE"] = "none";
+})(ArchiveCompression || (ArchiveCompression = {}));
+
 class Archive {
     /**
      * Initialize libarchivejs
@@ -385,6 +476,23 @@ class Archive {
         };
         return Archive._options;
     }
+    static async write({ files, outputFileName, compression, format, passphrase = null }) {
+        const _worker = new Worker(Archive._options.workerUrl, {
+            type: "module",
+        });
+        const Client = wrap(_worker);
+        // @ts-ignore - Promise.WithResolvers
+        let { promise: clientReady, resolve } = Promise.withResolvers();
+        const _client = await new Client(proxy(() => {
+            resolve();
+        }));
+        await clientReady;
+        console.log(compression, format);
+        const archiveData = await _client.writeArchive(files, compression, format, passphrase);
+        return new File([archiveData], outputFileName, {
+            type: "application/octet-stream",
+        });
+    }
     /**
      * Creates new archive instance from browser native File object
      * @param {File} file
@@ -392,9 +500,7 @@ class Archive {
      * @returns {Archive}
      */
     static open(file, options = null) {
-        options = options ||
-            Archive._options ||
-            Archive.init();
+        options = options || Archive._options || Archive.init();
         const arch = new Archive(file, options);
         return arch.open();
     }
@@ -479,17 +585,17 @@ class Archive {
         const client = await this.getClient();
         const files = await client.listFiles();
         files.forEach((entry) => {
-            const [target, prop] = this._getProp(this._content, entry.path);
+            const [target, prop] = getObjectPropReference(this._content, entry.path);
             if (entry.type === "FILE") {
                 target[prop] = new CompressedFile(entry.fileName, entry.size, entry.path, entry.lastModified, this);
             }
         });
         this._processed = 1;
-        return this._cloneContent(this._content);
+        return cloneContent(this._content);
     }
     getFilesArray() {
         return this.getFilesObject().then((obj) => {
-            return this._objectToArray(obj);
+            return objectToArray(obj);
         });
     }
     async extractSingleFile(target) {
@@ -517,7 +623,7 @@ class Archive {
         const client = await this.getClient();
         const files = await client.extractFiles();
         files.forEach((entry) => {
-            const [target, prop] = this._getProp(this._content, entry.path);
+            const [target, prop] = getObjectPropReference(this._content, entry.path);
             if (entry.type === "FILE") {
                 target[prop] = new File([entry.fileData], entry.fileName, {
                     type: "application/octet-stream",
@@ -532,46 +638,8 @@ class Archive {
         });
         this._processed = 2;
         (_a = this._worker) === null || _a === void 0 ? void 0 : _a.terminate();
-        return this._cloneContent(this._content);
-    }
-    _cloneContent(obj) {
-        if (obj instanceof File || obj instanceof CompressedFile || obj === null)
-            return obj;
-        const o = {};
-        for (const prop of Object.keys(obj)) {
-            o[prop] = this._cloneContent(obj[prop]);
-        }
-        return o;
-    }
-    _objectToArray(obj, path = "") {
-        const files = [];
-        for (const key of Object.keys(obj)) {
-            if (obj[key] instanceof File ||
-                obj[key] instanceof CompressedFile ||
-                obj[key] === null) {
-                files.push({
-                    file: obj[key] || key,
-                    path: path,
-                });
-            }
-            else {
-                files.push(...this._objectToArray(obj[key], `${path}${key}/`));
-            }
-        }
-        return files;
-    }
-    _getProp(obj, path) {
-        const parts = path.split("/");
-        if (parts[parts.length - 1] === "")
-            parts.pop();
-        let cur = obj, prev = null;
-        for (const part of parts) {
-            cur[part] = cur[part] || {};
-            prev = cur;
-            cur = cur[part];
-        }
-        return [prev, parts[parts.length - 1]];
+        return cloneContent(this._content);
     }
 }
 
-export { Archive };
+export { Archive, ArchiveCompression, ArchiveFormat };

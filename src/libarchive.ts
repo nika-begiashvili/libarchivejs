@@ -1,17 +1,37 @@
 import { CompressedFile } from "./compressed-file.js";
 import * as Comlink from "comlink";
+import {
+  cloneContent,
+  getObjectPropReference,
+  objectToArray,
+} from "./utils.js";
+import { ArchiveCompression, ArchiveFormat } from "./formats.js";
+export { ArchiveCompression, ArchiveFormat } from "./formats.js";
 
-type ArchiveOptions = {
+export type ArchiveOptions = {
   workerUrl: string | URL;
 };
 
-type ArchiveEntry = {
+export type ArchiveEntry = {
   size: number;
   path: string;
   type: string;
   lastModified: number;
   fileData: ArrayBuffer;
   fileName: string;
+};
+
+export type ArchiveEntryFile = {
+  file: ArchiveEntryFile;
+  pathname?: string;
+};
+
+export type ArchiveWriteOptions = {
+  files: ArchiveEntryFile[];
+  outputFileName: string;
+  compression: ArchiveCompression;
+  format: ArchiveFormat;
+  passphrase: string | null;
 };
 
 export class Archive {
@@ -36,13 +56,51 @@ export class Archive {
   private _file: File | null;
   private _client: any;
 
+  static async write({
+    files,
+    outputFileName,
+    compression,
+    format,
+    passphrase = null,
+  }: ArchiveWriteOptions) {
+    const _worker = new Worker(Archive._options.workerUrl, {
+      type: "module",
+    });
+
+    const Client = Comlink.wrap(_worker as any) as any;
+    // @ts-ignore - Promise.WithResolvers
+    let { promise: clientReady, resolve } = Promise.withResolvers();
+
+    const _client = await new Client(
+      Comlink.proxy(() => {
+        resolve();
+      }),
+    );
+
+    await clientReady;
+
+    const archiveData = await _client.writeArchive(
+      files,
+      compression,
+      format,
+      passphrase,
+    );
+
+    return new File([archiveData], outputFileName, {
+      type: "application/octet-stream",
+    });
+  }
+
   /**
    * Creates new archive instance from browser native File object
    * @param {File} file
    * @param {object} options
    * @returns {Archive}
    */
-  static open(file: File, options: ArchiveOptions | null = null) {
+  static open(
+    file: File,
+    options: ArchiveOptions | null = null,
+  ): Promise<Archive> {
     options = options || Archive._options || Archive.init();
     const arch = new Archive(file, options);
     return arch.open();
@@ -63,7 +121,7 @@ export class Archive {
     this._file = file;
   }
 
-  async getClient() {
+  private async getClient() {
     if (!this._client) {
       const Client = Comlink.wrap(this._worker as any) as any;
       // @ts-ignore - Promise.WithResolvers
@@ -83,7 +141,7 @@ export class Archive {
    * Prepares file for reading
    * @returns {Promise<Archive>} archive instance
    */
-  open() {
+  open(): Promise<Archive> {
     return new Promise((resolve, _) => {
       this.getClient().then((client) => {
         client.open(
@@ -110,7 +168,7 @@ export class Archive {
    * detect if archive has encrypted data
    * @returns {boolean|null} null if could not be determined
    */
-  async hasEncryptedData() {
+  async hasEncryptedData(): Promise<boolean | null> {
     const client = await this.getClient();
     return await client.hasEncryptedData();
   }
@@ -135,7 +193,7 @@ export class Archive {
    * Returns object containing directory structure and file information
    * @returns {Promise<object>}
    */
-  async getFilesObject() {
+  async getFilesObject(): Promise<any> {
     if (this._processed > 0) {
       return Promise.resolve().then(() => this._content);
     }
@@ -143,7 +201,7 @@ export class Archive {
     const files = await client.listFiles();
 
     files.forEach((entry: ArchiveEntry) => {
-      const [target, prop] = this._getProp(this._content, entry.path);
+      const [target, prop] = getObjectPropReference(this._content, entry.path);
       if (entry.type === "FILE") {
         target[prop] = new CompressedFile(
           entry.fileName,
@@ -156,16 +214,16 @@ export class Archive {
     });
 
     this._processed = 1;
-    return this._cloneContent(this._content);
+    return cloneContent(this._content);
   }
 
-  getFilesArray() {
+  getFilesArray(): Promise<any[]> {
     return this.getFilesObject().then((obj) => {
-      return this._objectToArray(obj);
+      return objectToArray(obj);
     });
   }
 
-  async extractSingleFile(target: string) {
+  async extractSingleFile(target: string): Promise<File> {
     // Prevent extraction if worker already terminated
     if (this._worker === null) {
       throw new Error("Archive already closed");
@@ -184,7 +242,9 @@ export class Archive {
    * @param {Function} extractCallback
    *
    */
-  async extractFiles(extractCallback: Function | undefined = undefined) {
+  async extractFiles(
+    extractCallback: Function | undefined = undefined,
+  ): Promise<any> {
     if (this._processed > 1) {
       return Promise.resolve().then(() => this._content);
     }
@@ -192,7 +252,7 @@ export class Archive {
     const files = await client.extractFiles();
 
     files.forEach((entry: ArchiveEntry) => {
-      const [target, prop] = this._getProp(this._content, entry.path);
+      const [target, prop] = getObjectPropReference(this._content, entry.path);
       if (entry.type === "FILE") {
         target[prop] = new File([entry.fileData], entry.fileName, {
           type: "application/octet-stream",
@@ -210,48 +270,6 @@ export class Archive {
 
     this._processed = 2;
     this._worker?.terminate();
-    return this._cloneContent(this._content);
-  }
-
-  _cloneContent(obj: any) {
-    if (obj instanceof File || obj instanceof CompressedFile || obj === null)
-      return obj;
-    const o: any = {};
-    for (const prop of Object.keys(obj)) {
-      o[prop] = this._cloneContent(obj[prop]);
-    }
-    return o;
-  }
-
-  _objectToArray(obj: any, path: string = "") {
-    const files: any[] = [];
-    for (const key of Object.keys(obj)) {
-      if (
-        obj[key] instanceof File ||
-        obj[key] instanceof CompressedFile ||
-        obj[key] === null
-      ) {
-        files.push({
-          file: obj[key] || key,
-          path: path,
-        });
-      } else {
-        files.push(...this._objectToArray(obj[key], `${path}${key}/`));
-      }
-    }
-    return files;
-  }
-
-  _getProp(obj: any, path: string) {
-    const parts = path.split("/");
-    if (parts[parts.length - 1] === "") parts.pop();
-    let cur = obj,
-      prev = null;
-    for (const part of parts) {
-      cur[part] = cur[part] || {};
-      prev = cur;
-      cur = cur[part];
-    }
-    return [prev, parts[parts.length - 1]];
+    return cloneContent(this._content);
   }
 }

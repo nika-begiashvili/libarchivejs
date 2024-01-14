@@ -309,9 +309,9 @@ var libarchive = (() => {
       var info = { a: wasmImports };
       function receiveInstance(instance, module) {
         wasmExports = instance.exports;
-        wasmMemory = wasmExports["x"];
+        wasmMemory = wasmExports["C"];
         updateMemoryViews();
-        addOnInit(wasmExports["y"]);
+        addOnInit(wasmExports["D"]);
         removeRunDependency("wasm-instantiate");
         return wasmExports;
       }
@@ -3102,6 +3102,43 @@ var libarchive = (() => {
         return -e.errno;
       }
     }
+    function ___syscall_unlinkat(dirfd, path, flags) {
+      try {
+        path = SYSCALLS.getStr(path);
+        path = SYSCALLS.calculateAt(dirfd, path);
+        if (flags === 0) {
+          FS.unlink(path);
+        } else if (flags === 512) {
+          FS.rmdir(path);
+        } else {
+          abort("Invalid flags passed to unlinkat");
+        }
+        return 0;
+      } catch (e) {
+        if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
+        return -e.errno;
+      }
+    }
+    var nowIsMonotonic = 1;
+    var __emscripten_get_now_is_monotonic = () => nowIsMonotonic;
+    var convertI32PairToI53Checked = (lo, hi) =>
+      (hi + 2097152) >>> 0 < 4194305 - !!lo
+        ? (lo >>> 0) + hi * 4294967296
+        : NaN;
+    function __gmtime_js(time_low, time_high, tmPtr) {
+      var time = convertI32PairToI53Checked(time_low, time_high);
+      var date = new Date(time * 1e3);
+      HEAP32[tmPtr >> 2] = date.getUTCSeconds();
+      HEAP32[(tmPtr + 4) >> 2] = date.getUTCMinutes();
+      HEAP32[(tmPtr + 8) >> 2] = date.getUTCHours();
+      HEAP32[(tmPtr + 12) >> 2] = date.getUTCDate();
+      HEAP32[(tmPtr + 16) >> 2] = date.getUTCMonth();
+      HEAP32[(tmPtr + 20) >> 2] = date.getUTCFullYear() - 1900;
+      HEAP32[(tmPtr + 24) >> 2] = date.getUTCDay();
+      var start = Date.UTC(date.getUTCFullYear(), 0, 1, 0, 0, 0, 0);
+      var yday = ((date.getTime() - start) / (1e3 * 60 * 60 * 24)) | 0;
+      HEAP32[(tmPtr + 28) >> 2] = yday;
+    }
     var isLeapYear = (year) =>
       year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
     var MONTH_DAYS_LEAP_CUMULATIVE = [
@@ -3118,10 +3155,6 @@ var libarchive = (() => {
       var yday = monthDaysCumulative[date.getMonth()] + date.getDate() - 1;
       return yday;
     };
-    var convertI32PairToI53Checked = (lo, hi) =>
-      (hi + 2097152) >>> 0 < 4194305 - !!lo
-        ? (lo >>> 0) + hi * 4294967296
-        : NaN;
     function __localtime_js(time_low, time_high, tmPtr) {
       var time = convertI32PairToI53Checked(time_low, time_high);
       var date = new Date(time * 1e3);
@@ -3271,6 +3304,9 @@ var libarchive = (() => {
     var _abort = () => {
       abort("");
     };
+    var _emscripten_date_now = () => Date.now();
+    var _emscripten_get_now;
+    _emscripten_get_now = () => performance.now();
     var _emscripten_memcpy_js = (dest, src, num) =>
       HEAPU8.copyWithin(dest, src, src + num);
     var getHeapMax = () => 2147483648;
@@ -3470,12 +3506,278 @@ var libarchive = (() => {
         return e.errno;
       }
     }
-    var getCFunc = (ident) => {
-      var func = Module["_" + ident];
-      return func;
+    var arraySum = (array, index) => {
+      var sum = 0;
+      for (var i = 0; i <= index; sum += array[i++]) {}
+      return sum;
+    };
+    var MONTH_DAYS_LEAP = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    var MONTH_DAYS_REGULAR = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    var addDays = (date, days) => {
+      var newDate = new Date(date.getTime());
+      while (days > 0) {
+        var leap = isLeapYear(newDate.getFullYear());
+        var currentMonth = newDate.getMonth();
+        var daysInCurrentMonth = (leap ? MONTH_DAYS_LEAP : MONTH_DAYS_REGULAR)[
+          currentMonth
+        ];
+        if (days > daysInCurrentMonth - newDate.getDate()) {
+          days -= daysInCurrentMonth - newDate.getDate() + 1;
+          newDate.setDate(1);
+          if (currentMonth < 11) {
+            newDate.setMonth(currentMonth + 1);
+          } else {
+            newDate.setMonth(0);
+            newDate.setFullYear(newDate.getFullYear() + 1);
+          }
+        } else {
+          newDate.setDate(newDate.getDate() + days);
+          return newDate;
+        }
+      }
+      return newDate;
     };
     var writeArrayToMemory = (array, buffer) => {
       HEAP8.set(array, buffer);
+    };
+    var _strftime = (s, maxsize, format, tm) => {
+      var tm_zone = HEAPU32[(tm + 40) >> 2];
+      var date = {
+        tm_sec: HEAP32[tm >> 2],
+        tm_min: HEAP32[(tm + 4) >> 2],
+        tm_hour: HEAP32[(tm + 8) >> 2],
+        tm_mday: HEAP32[(tm + 12) >> 2],
+        tm_mon: HEAP32[(tm + 16) >> 2],
+        tm_year: HEAP32[(tm + 20) >> 2],
+        tm_wday: HEAP32[(tm + 24) >> 2],
+        tm_yday: HEAP32[(tm + 28) >> 2],
+        tm_isdst: HEAP32[(tm + 32) >> 2],
+        tm_gmtoff: HEAP32[(tm + 36) >> 2],
+        tm_zone: tm_zone ? UTF8ToString(tm_zone) : "",
+      };
+      var pattern = UTF8ToString(format);
+      var EXPANSION_RULES_1 = {
+        "%c": "%a %b %d %H:%M:%S %Y",
+        "%D": "%m/%d/%y",
+        "%F": "%Y-%m-%d",
+        "%h": "%b",
+        "%r": "%I:%M:%S %p",
+        "%R": "%H:%M",
+        "%T": "%H:%M:%S",
+        "%x": "%m/%d/%y",
+        "%X": "%H:%M:%S",
+        "%Ec": "%c",
+        "%EC": "%C",
+        "%Ex": "%m/%d/%y",
+        "%EX": "%H:%M:%S",
+        "%Ey": "%y",
+        "%EY": "%Y",
+        "%Od": "%d",
+        "%Oe": "%e",
+        "%OH": "%H",
+        "%OI": "%I",
+        "%Om": "%m",
+        "%OM": "%M",
+        "%OS": "%S",
+        "%Ou": "%u",
+        "%OU": "%U",
+        "%OV": "%V",
+        "%Ow": "%w",
+        "%OW": "%W",
+        "%Oy": "%y",
+      };
+      for (var rule in EXPANSION_RULES_1) {
+        pattern = pattern.replace(
+          new RegExp(rule, "g"),
+          EXPANSION_RULES_1[rule],
+        );
+      }
+      var WEEKDAYS = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      var MONTHS = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      function leadingSomething(value, digits, character) {
+        var str = typeof value == "number" ? value.toString() : value || "";
+        while (str.length < digits) {
+          str = character[0] + str;
+        }
+        return str;
+      }
+      function leadingNulls(value, digits) {
+        return leadingSomething(value, digits, "0");
+      }
+      function compareByDay(date1, date2) {
+        function sgn(value) {
+          return value < 0 ? -1 : value > 0 ? 1 : 0;
+        }
+        var compare;
+        if ((compare = sgn(date1.getFullYear() - date2.getFullYear())) === 0) {
+          if ((compare = sgn(date1.getMonth() - date2.getMonth())) === 0) {
+            compare = sgn(date1.getDate() - date2.getDate());
+          }
+        }
+        return compare;
+      }
+      function getFirstWeekStartDate(janFourth) {
+        switch (janFourth.getDay()) {
+          case 0:
+            return new Date(janFourth.getFullYear() - 1, 11, 29);
+          case 1:
+            return janFourth;
+          case 2:
+            return new Date(janFourth.getFullYear(), 0, 3);
+          case 3:
+            return new Date(janFourth.getFullYear(), 0, 2);
+          case 4:
+            return new Date(janFourth.getFullYear(), 0, 1);
+          case 5:
+            return new Date(janFourth.getFullYear() - 1, 11, 31);
+          case 6:
+            return new Date(janFourth.getFullYear() - 1, 11, 30);
+        }
+      }
+      function getWeekBasedYear(date) {
+        var thisDate = addDays(
+          new Date(date.tm_year + 1900, 0, 1),
+          date.tm_yday,
+        );
+        var janFourthThisYear = new Date(thisDate.getFullYear(), 0, 4);
+        var janFourthNextYear = new Date(thisDate.getFullYear() + 1, 0, 4);
+        var firstWeekStartThisYear = getFirstWeekStartDate(janFourthThisYear);
+        var firstWeekStartNextYear = getFirstWeekStartDate(janFourthNextYear);
+        if (compareByDay(firstWeekStartThisYear, thisDate) <= 0) {
+          if (compareByDay(firstWeekStartNextYear, thisDate) <= 0) {
+            return thisDate.getFullYear() + 1;
+          }
+          return thisDate.getFullYear();
+        }
+        return thisDate.getFullYear() - 1;
+      }
+      var EXPANSION_RULES_2 = {
+        "%a": (date) => WEEKDAYS[date.tm_wday].substring(0, 3),
+        "%A": (date) => WEEKDAYS[date.tm_wday],
+        "%b": (date) => MONTHS[date.tm_mon].substring(0, 3),
+        "%B": (date) => MONTHS[date.tm_mon],
+        "%C": (date) => {
+          var year = date.tm_year + 1900;
+          return leadingNulls((year / 100) | 0, 2);
+        },
+        "%d": (date) => leadingNulls(date.tm_mday, 2),
+        "%e": (date) => leadingSomething(date.tm_mday, 2, " "),
+        "%g": (date) => getWeekBasedYear(date).toString().substring(2),
+        "%G": (date) => getWeekBasedYear(date),
+        "%H": (date) => leadingNulls(date.tm_hour, 2),
+        "%I": (date) => {
+          var twelveHour = date.tm_hour;
+          if (twelveHour == 0) twelveHour = 12;
+          else if (twelveHour > 12) twelveHour -= 12;
+          return leadingNulls(twelveHour, 2);
+        },
+        "%j": (date) =>
+          leadingNulls(
+            date.tm_mday +
+              arraySum(
+                isLeapYear(date.tm_year + 1900)
+                  ? MONTH_DAYS_LEAP
+                  : MONTH_DAYS_REGULAR,
+                date.tm_mon - 1,
+              ),
+            3,
+          ),
+        "%m": (date) => leadingNulls(date.tm_mon + 1, 2),
+        "%M": (date) => leadingNulls(date.tm_min, 2),
+        "%n": () => "\n",
+        "%p": (date) => {
+          if (date.tm_hour >= 0 && date.tm_hour < 12) {
+            return "AM";
+          }
+          return "PM";
+        },
+        "%S": (date) => leadingNulls(date.tm_sec, 2),
+        "%t": () => "\t",
+        "%u": (date) => date.tm_wday || 7,
+        "%U": (date) => {
+          var days = date.tm_yday + 7 - date.tm_wday;
+          return leadingNulls(Math.floor(days / 7), 2);
+        },
+        "%V": (date) => {
+          var val = Math.floor(
+            (date.tm_yday + 7 - ((date.tm_wday + 6) % 7)) / 7,
+          );
+          if ((date.tm_wday + 371 - date.tm_yday - 2) % 7 <= 2) {
+            val++;
+          }
+          if (!val) {
+            val = 52;
+            var dec31 = (date.tm_wday + 7 - date.tm_yday - 1) % 7;
+            if (
+              dec31 == 4 ||
+              (dec31 == 5 && isLeapYear((date.tm_year % 400) - 1))
+            ) {
+              val++;
+            }
+          } else if (val == 53) {
+            var jan1 = (date.tm_wday + 371 - date.tm_yday) % 7;
+            if (jan1 != 4 && (jan1 != 3 || !isLeapYear(date.tm_year))) val = 1;
+          }
+          return leadingNulls(val, 2);
+        },
+        "%w": (date) => date.tm_wday,
+        "%W": (date) => {
+          var days = date.tm_yday + 7 - ((date.tm_wday + 6) % 7);
+          return leadingNulls(Math.floor(days / 7), 2);
+        },
+        "%y": (date) => (date.tm_year + 1900).toString().substring(2),
+        "%Y": (date) => date.tm_year + 1900,
+        "%z": (date) => {
+          var off = date.tm_gmtoff;
+          var ahead = off >= 0;
+          off = Math.abs(off) / 60;
+          off = (off / 60) * 100 + (off % 60);
+          return (ahead ? "+" : "-") + String("0000" + off).slice(-4);
+        },
+        "%Z": (date) => date.tm_zone,
+        "%%": () => "%",
+      };
+      pattern = pattern.replace(/%%/g, "\0\0");
+      for (var rule in EXPANSION_RULES_2) {
+        if (pattern.includes(rule)) {
+          pattern = pattern.replace(
+            new RegExp(rule, "g"),
+            EXPANSION_RULES_2[rule](date),
+          );
+        }
+      }
+      pattern = pattern.replace(/\0\0/g, "%");
+      var bytes = intArrayFromString(pattern, false);
+      if (bytes.length > maxsize) {
+        return 0;
+      }
+      writeArrayToMemory(bytes, s);
+      return bytes.length - 1;
+    };
+    var getCFunc = (ident) => {
+      var func = Module["_" + ident];
+      return func;
     };
     var stringToUTF8OnStack = (str) => {
       var size = lengthBytesUTF8(str) + 1;
@@ -3603,34 +3905,39 @@ var libarchive = (() => {
     var wasmImports = {
       i: ___syscall_dup,
       a: ___syscall_fcntl64,
-      v: ___syscall_fstat64,
-      s: ___syscall_lstat64,
-      t: ___syscall_newfstatat,
-      w: ___syscall_openat,
-      r: ___syscall_pipe,
-      q: ___syscall_poll,
-      u: ___syscall_stat64,
-      k: __localtime_js,
-      l: __mktime_js,
-      m: __timegm_js,
-      p: __tzset_js,
+      x: ___syscall_fstat64,
+      u: ___syscall_lstat64,
+      v: ___syscall_newfstatat,
+      y: ___syscall_openat,
+      t: ___syscall_pipe,
+      s: ___syscall_poll,
+      w: ___syscall_stat64,
+      q: ___syscall_unlinkat,
+      B: __emscripten_get_now_is_monotonic,
+      k: __gmtime_js,
+      l: __localtime_js,
+      m: __mktime_js,
+      n: __timegm_js,
+      r: __tzset_js,
       b: _abort,
+      c: _emscripten_date_now,
       h: _emscripten_memcpy_js,
-      o: _emscripten_resize_heap,
-      f: _environ_get,
-      g: _environ_sizes_get,
-      e: _exit,
-      d: _fd_close,
+      p: _emscripten_resize_heap,
+      z: _environ_get,
+      A: _environ_sizes_get,
+      g: _exit,
+      e: _fd_close,
       j: _fd_read,
-      n: _fd_seek,
-      c: _fd_write,
+      o: _fd_seek,
+      d: _fd_write,
+      f: _strftime,
     };
     var wasmExports = createWasm();
-    var ___wasm_call_ctors = () => (___wasm_call_ctors = wasmExports["y"])();
+    var ___wasm_call_ctors = () => (___wasm_call_ctors = wasmExports["D"])();
     var _get_version = (Module["_get_version"] = () =>
-      (_get_version = Module["_get_version"] = wasmExports["z"])());
+      (_get_version = Module["_get_version"] = wasmExports["E"])());
     var _archive_open = (Module["_archive_open"] = (a0, a1, a2, a3) =>
-      (_archive_open = Module["_archive_open"] = wasmExports["A"])(
+      (_archive_open = Module["_archive_open"] = wasmExports["F"])(
         a0,
         a1,
         a2,
@@ -3639,66 +3946,97 @@ var libarchive = (() => {
     var _archive_read_add_passphrase = (Module["_archive_read_add_passphrase"] =
       (a0, a1) =>
         (_archive_read_add_passphrase = Module["_archive_read_add_passphrase"] =
-          wasmExports["B"])(a0, a1));
+          wasmExports["G"])(a0, a1));
     var _archive_error_string = (Module["_archive_error_string"] = (a0) =>
       (_archive_error_string = Module["_archive_error_string"] =
-        wasmExports["C"])(a0));
+        wasmExports["H"])(a0));
     var _get_next_entry = (Module["_get_next_entry"] = (a0) =>
-      (_get_next_entry = Module["_get_next_entry"] = wasmExports["D"])(a0));
+      (_get_next_entry = Module["_get_next_entry"] = wasmExports["I"])(a0));
     var _get_filedata = (Module["_get_filedata"] = (a0, a1) =>
-      (_get_filedata = Module["_get_filedata"] = wasmExports["E"])(a0, a1));
+      (_get_filedata = Module["_get_filedata"] = wasmExports["J"])(a0, a1));
     var _malloc = (Module["_malloc"] = (a0) =>
-      (_malloc = Module["_malloc"] = wasmExports["F"])(a0));
+      (_malloc = Module["_malloc"] = wasmExports["K"])(a0));
     var _archive_close = (Module["_archive_close"] = (a0) =>
-      (_archive_close = Module["_archive_close"] = wasmExports["G"])(a0));
+      (_archive_close = Module["_archive_close"] = wasmExports["L"])(a0));
+    var _start_archive_write = (Module["_start_archive_write"] = (
+      a0,
+      a1,
+      a2,
+      a3,
+      a4,
+      a5,
+    ) =>
+      (_start_archive_write = Module["_start_archive_write"] =
+        wasmExports["M"])(a0, a1, a2, a3, a4, a5));
+    var _write_archive_file = (Module["_write_archive_file"] = (
+      a0,
+      a1,
+      a2,
+      a3,
+    ) =>
+      (_write_archive_file = Module["_write_archive_file"] = wasmExports["N"])(
+        a0,
+        a1,
+        a2,
+        a3,
+      ));
+    var _size_of_size_t = (Module["_size_of_size_t"] = () =>
+      (_size_of_size_t = Module["_size_of_size_t"] = wasmExports["O"])());
+    var _free = (Module["_free"] = (a0) =>
+      (_free = Module["_free"] = wasmExports["P"])(a0));
+    var ___errno_location = () => (___errno_location = wasmExports["Q"])();
     var _archive_entry_birthtime_nsec = (Module[
       "_archive_entry_birthtime_nsec"
     ] = (a0) =>
       (_archive_entry_birthtime_nsec = Module["_archive_entry_birthtime_nsec"] =
-        wasmExports["H"])(a0));
+        wasmExports["R"])(a0));
     var _archive_entry_filetype = (Module["_archive_entry_filetype"] = (a0) =>
       (_archive_entry_filetype = Module["_archive_entry_filetype"] =
-        wasmExports["I"])(a0));
+        wasmExports["S"])(a0));
     var _archive_entry_mtime_nsec = (Module["_archive_entry_mtime_nsec"] = (
       a0,
     ) =>
       (_archive_entry_mtime_nsec = Module["_archive_entry_mtime_nsec"] =
-        wasmExports["J"])(a0));
+        wasmExports["T"])(a0));
     var _archive_entry_pathname = (Module["_archive_entry_pathname"] = (a0) =>
       (_archive_entry_pathname = Module["_archive_entry_pathname"] =
-        wasmExports["K"])(a0));
+        wasmExports["U"])(a0));
     var _archive_entry_pathname_utf8 = (Module["_archive_entry_pathname_utf8"] =
       (a0) =>
         (_archive_entry_pathname_utf8 = Module["_archive_entry_pathname_utf8"] =
-          wasmExports["L"])(a0));
+          wasmExports["V"])(a0));
     var _archive_entry_size = (Module["_archive_entry_size"] = (a0) =>
-      (_archive_entry_size = Module["_archive_entry_size"] = wasmExports["M"])(
+      (_archive_entry_size = Module["_archive_entry_size"] = wasmExports["W"])(
         a0,
       ));
     var _archive_entry_is_encrypted = (Module["_archive_entry_is_encrypted"] = (
       a0,
     ) =>
       (_archive_entry_is_encrypted = Module["_archive_entry_is_encrypted"] =
-        wasmExports["N"])(a0));
-    var _free = (Module["_free"] = (a0) =>
-      (_free = Module["_free"] = wasmExports["O"])(a0));
-    var ___errno_location = () => (___errno_location = wasmExports["P"])();
+        wasmExports["X"])(a0));
     var _archive_read_has_encrypted_entries = (Module[
       "_archive_read_has_encrypted_entries"
     ] = (a0) =>
       (_archive_read_has_encrypted_entries = Module[
         "_archive_read_has_encrypted_entries"
       ] =
-        wasmExports["Q"])(a0));
+        wasmExports["Y"])(a0));
     var _archive_read_data_skip = (Module["_archive_read_data_skip"] = (a0) =>
       (_archive_read_data_skip = Module["_archive_read_data_skip"] =
-        wasmExports["R"])(a0));
+        wasmExports["Z"])(a0));
+    var _archive_write_close = (Module["_archive_write_close"] = (a0) =>
+      (_archive_write_close = Module["_archive_write_close"] =
+        wasmExports["$"])(a0));
+    var _archive_write_free = (Module["_archive_write_free"] = (a0) =>
+      (_archive_write_free = Module["_archive_write_free"] = wasmExports["aa"])(
+        a0,
+      ));
     var _htons = (a0) => (_htons = wasmExports["htons"])(a0);
     var _ntohs = (a0) => (_ntohs = wasmExports["ntohs"])(a0);
-    var setTempRet0 = (a0) => (setTempRet0 = wasmExports["T"])(a0);
-    var stackSave = () => (stackSave = wasmExports["U"])();
-    var stackRestore = (a0) => (stackRestore = wasmExports["V"])(a0);
-    var stackAlloc = (a0) => (stackAlloc = wasmExports["W"])(a0);
+    var setTempRet0 = (a0) => (setTempRet0 = wasmExports["ba"])(a0);
+    var stackSave = () => (stackSave = wasmExports["ca"])();
+    var stackRestore = (a0) => (stackRestore = wasmExports["da"])(a0);
+    var stackAlloc = (a0) => (stackAlloc = wasmExports["ea"])(a0);
     Module["cwrap"] = cwrap;
     Module["UTF8ToString"] = UTF8ToString;
     Module["intArrayFromString"] = intArrayFromString;

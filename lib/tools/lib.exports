@@ -16,5 +16,10 @@
     "_archive_read_has_encrypted_entries",
     "_archive_read_add_passphrase",
     "_free", 
-    "_malloc"
+    "_malloc",
+    "_size_of_size_t",
+    "_start_archive_write",
+    "_write_archive_file",
+    "_archive_write_close",
+    "_archive_write_free"
 ]

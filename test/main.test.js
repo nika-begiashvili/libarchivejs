@@ -41,6 +41,13 @@ describe("extract various compression types", () => {
     expect(encrypted).toEqual(true);
     expect(files).toEqual(checksum);
   }, 16000);
+
+  test("create new tar.gz archive", async () => {
+    await navigate(page, "write-archive.html");
+    await inputFile("archives/README.md", page);
+    const checksums = await response(page);
+    expect(checksums["README.md"]).toEqual(checksum["README.md"]);
+  }, 16000);
 });
 
 afterAll(() => {

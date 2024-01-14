@@ -10,7 +10,7 @@ const TYPE_MAP = {
 
 export class ArchiveReader {
   /**
-   * archive reader
+   * Archive reader
    * @param {WasmModule} wasmModule emscripten module
    */
   constructor(wasmModule) {
@@ -22,24 +22,21 @@ export class ArchiveReader {
   }
 
   /**
-   * open archive, needs to closed manually
+   * Open archive, needs to closed manually
    * @param {File} file
    */
-  open(file) {
+  async open(file) {
     if (this._file !== null) {
       console.warn("Closing previous file");
       this.close();
     }
-    const { promise, resolve, reject } = Promise.withResolvers();
-    this._file = file;
-    const reader = new FileReader();
-    reader.onload = () => this._loadFile(reader.result, resolve, reject);
-    reader.readAsArrayBuffer(file);
-    return promise;
+    const fileData = await this._loadFile(file);
+    this._fileLength = fileData.length;
+    this._filePtr = fileData.ptr;
   }
 
   /**
-   * close archive
+   * Close archive
    */
   close() {
     this._runCode.closeArchive(this._archive);
@@ -50,7 +47,7 @@ export class ArchiveReader {
   }
 
   /**
-   * detect if archive has encrypted data
+   * Detect if archive has encrypted data
    * @returns {boolean|null} null if could not be determined
    */
   hasEncryptedData() {
@@ -88,7 +85,7 @@ export class ArchiveReader {
   }
 
   /**
-   * get archive entries
+   * Get archive entries
    * @param {boolean} skipExtraction
    * @param {string} except don't skip extraction for this entry
    */
@@ -124,7 +121,7 @@ export class ArchiveReader {
         if (ptr < 0) {
           throw new Error(this._runCode.getError(this._archive));
         }
-        entryData.fileData = this._wasmModule.HEAP8.slice(
+        entryData.fileData = this._wasmModule.HEAPU8.slice(
           ptr,
           ptr + entryData.size,
         );
@@ -139,10 +136,31 @@ export class ArchiveReader {
       const array = new Uint8Array(fileBuffer);
       this._fileLength = array.length;
       this._filePtr = this._runCode.malloc(this._fileLength);
-      this._wasmModule.HEAP8.set(array, this._filePtr);
+      this._wasmModule.HEAPU8.set(array, this._filePtr);
       resolve();
     } catch (error) {
       reject(error);
     }
+  }
+
+  _loadFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const array = new Uint8Array(reader.result);
+          const filePtr = this._runCode.malloc(array.length);
+          this._wasmModule.HEAPU8.set(array, filePtr);
+          resolve({
+            ptr: filePtr,
+            length: array.length,
+          });
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
   }
 }

@@ -11,6 +11,8 @@
     "build": "rollup --config ./rollup.config.js --environment BUILD:production",
     "build:dev": "rollup --config ./rollup.config.js --environment BUILD:development",
     "test": "jest --runInBand",
+    "lint": "eslint \"*/**/*.{ts,js,json}\"",
+    "lint:fix": "eslint \"*/**/*.{ts,js,json}\" --fix",
     "prettier:fix": "npx prettier . --write"
   },
   "keywords": [
