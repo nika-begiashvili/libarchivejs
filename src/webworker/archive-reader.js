@@ -131,36 +131,14 @@ export class ArchiveReader {
     }
   }
 
-  _loadFile(fileBuffer, resolve, reject) {
-    try {
-      const array = new Uint8Array(fileBuffer);
-      this._fileLength = array.length;
-      this._filePtr = this._runCode.malloc(this._fileLength);
-      this._wasmModule.HEAPU8.set(array, this._filePtr);
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
-  }
-
-  _loadFile(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const array = new Uint8Array(reader.result);
-          const filePtr = this._runCode.malloc(array.length);
-          this._wasmModule.HEAPU8.set(array, filePtr);
-          resolve({
-            ptr: filePtr,
-            length: array.length,
-          });
-        } catch (error) {
-          reject(error);
-        }
-      };
-
-      reader.readAsArrayBuffer(file);
-    });
+  async _loadFile(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const array = new Uint8Array(arrayBuffer);
+    const filePtr = this._runCode.malloc(array.length);
+    this._wasmModule.HEAPU8.set(array, filePtr);
+    return {
+      ptr: filePtr,
+      length: array.length,
+    };
   }
 }

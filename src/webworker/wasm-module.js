@@ -119,20 +119,14 @@ export class WasmModule {
         "number",
         "string",
       ]),
-      //this.stringToUTF(str), //
       string: (str) => this.allocate(this.intArrayFromString(str), "i8", 0),
       malloc: this.cwrap("malloc", "number", ["number"]),
       free: this.cwrap("free", null, ["number"]),
       sizeOfSizeT: this.cwrap("size_of_size_t", "number", []),
     };
-    //console.log(this.runCode.getVersion());
   }
 
   monitorRunDependencies() {}
-
-  locateFile(path /* ,prefix */) {
-    return `${path}`;
-  }
 }
 
 export function getWasmModule(cb) {

@@ -5,7 +5,7 @@ import typescript from "@rollup/plugin-typescript";
 
 export default [
   {
-    input: "src/webworker/worker.js",
+    input: "src/webworker/browser-worker.js",
     output: [
       {
         file: "dist/worker-bundle.js",
@@ -19,7 +19,23 @@ export default [
           { src: "src/webworker/wasm-gen/libarchive.wasm", dest: "dist" },
         ],
       }),
-      // babel({ babelHelpers: 'bundled' }),
+    ].concat(process.env.BUILD === "production" ? [terser()] : []),
+  },
+  {
+    input: "src/webworker/node-worker.js",
+    output: [
+      {
+        file: "dist/worker-bundle-node.mjs",
+        format: "es",
+      },
+    ],
+    plugins: [
+      nodeResolve(),
+      copy({
+        targets: [
+          { src: "src/webworker/wasm-gen/libarchive.wasm", dest: "dist" },
+        ],
+      }),
     ].concat(process.env.BUILD === "production" ? [terser()] : []),
   },
   {
@@ -27,6 +43,18 @@ export default [
     output: [
       {
         file: "dist/libarchive.js",
+        format: "es",
+      },
+    ],
+    plugins: [typescript(), nodeResolve()].concat(
+      process.env.BUILD === "production" ? [terser()] : [],
+    ),
+  },
+  {
+    input: "src/libarchive-node.ts",
+    output: [
+      {
+        file: "dist/libarchive-node.mjs",
         format: "es",
       },
     ],

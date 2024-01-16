@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rollup --config ./rollup.config.js --environment BUILD:production",
     "build:dev": "rollup --config ./rollup.config.js --environment BUILD:development",
-    "test": "jest --runInBand",
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --runInBand",
     "lint": "eslint \"*/**/*.{ts,js,json}\"",
     "lint:fix": "eslint \"*/**/*.{ts,js,json}\" --fix",
     "prettier:fix": "npx prettier . --write"
@@ -47,5 +47,25 @@
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-terser": "^7.0.2",
     "static-server": "^2.2.1"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "mjs",
+      "js",
+      "jsx",
+      "ts",
+      "tsx",
+      "json",
+      "node"
+    ],
+    "testMatch": [
+      "**/*.test.js",
+      "**/*.test.mjs"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/cypress/"
+    ],
+    "transform": {}
   }
 }

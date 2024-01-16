@@ -1,14 +1,17 @@
 import { ArchiveReader } from "./archive-reader";
 import { ArchiveWriter } from "./archive-writer";
 import { getWasmModule } from "./wasm-module";
-import * as Comlink from "comlink/dist/esm/comlink.mjs";
 
 let reader = null;
 let writer = null;
+let ready = false;
 
-class LibArchiveWorker {
+export class LibArchiveWorker {
   constructor(readyCallback) {
     LibArchiveWorker.readyCallback = readyCallback;
+    if (ready) {
+      setTimeout(() => readyCallback(), 0);
+    }
   }
 
   open(file, cb) {
@@ -63,7 +66,6 @@ class LibArchiveWorker {
 getWasmModule((wasmModule) => {
   reader = new ArchiveReader(wasmModule);
   writer = new ArchiveWriter(wasmModule);
-  LibArchiveWorker?.readyCallback();
+  LibArchiveWorker?.readyCallback?.();
+  ready = true;
 });
-
-Comlink.expose(LibArchiveWorker);

@@ -6,37 +6,6 @@
   <body>
     <input type="file" id="file" />
     <script type="module">
-      function hex(buffer) {
-        const hexCodes = [];
-        const view = new DataView(buffer);
-        for (let i = 0; i < view.byteLength; i += 4) {
-          const value = view.getUint32(i);
-          const stringValue = value.toString(16);
-          const padding = "00000000";
-          const paddedValue = (padding + stringValue).slice(-padding.length);
-          hexCodes.push(paddedValue);
-        }
-        return hexCodes.join("");
-      }
-
-      function getChecksum(file) {
-        return new Promise((resolve, reject) => {
-          try {
-            const reader = new FileReader();
-            reader.onload = function () {
-              crypto.subtle
-                .digest("SHA-256", reader.result)
-                .then(function (hash) {
-                  resolve(hex(hash));
-                });
-            };
-            reader.readAsArrayBuffer(file);
-          } catch (err) {
-            reject(err);
-          }
-        });
-      }
-
       function finish() {
         const d = document.createElement("div");
         d.setAttribute("id", "done");
@@ -44,17 +13,8 @@
         document.body.appendChild(d);
       }
 
-      async function fileChecksums(obj) {
-        for (const [key, val] of Object.entries(obj)) {
-          obj[key] =
-            val instanceof File
-              ? await getChecksum(val)
-              : await fileChecksums(val);
-        }
-        return obj;
-      }
-
       import { Archive } from "/dist/libarchive.js";
+      import { fileChecksums } from "../checksum-utils.mjs";
 
       Archive.init({
         workerUrl: "/dist/worker-bundle.js",

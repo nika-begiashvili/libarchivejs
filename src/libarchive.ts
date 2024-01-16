@@ -9,7 +9,9 @@ import { ArchiveCompression, ArchiveFormat } from "./formats.js";
 export { ArchiveCompression, ArchiveFormat } from "./formats.js";
 
 export type ArchiveOptions = {
-  workerUrl: string | URL;
+  workerUrl?: string | URL;
+  worker?: any;
+  comlinkWrapper?: any;
 };
 
 export type ArchiveEntry = {
@@ -42,11 +44,7 @@ export class Archive {
    * @param {Object} options
    */
   static init(options: ArchiveOptions | null = null) {
-    Archive._options = {
-      workerUrl:
-        options?.workerUrl || new URL("./worker-bundle.js", import.meta.url),
-      ...options,
-    };
+    Archive._options = options || {};
     return Archive._options;
   }
 
@@ -56,6 +54,19 @@ export class Archive {
   private _file: File | null;
   private _client: any;
 
+  static getWorker(options: ArchiveOptions) {
+    if (options.worker) {
+      return options.worker;
+    } else {
+      return new Worker(
+        options?.workerUrl || new URL("./worker-bundle.js", import.meta.url),
+        {
+          type: "module",
+        },
+      );
+    }
+  }
+
   static async write({
     files,
     outputFileName,
@@ -63,11 +74,10 @@ export class Archive {
     format,
     passphrase = null,
   }: ArchiveWriteOptions) {
-    const _worker = new Worker(Archive._options.workerUrl, {
-      type: "module",
-    });
+    const _worker = Archive.getWorker(Archive._options);
 
-    const Client = Comlink.wrap(_worker as any) as any;
+    const Client =
+      Archive._options.comlinkWrapper || (Comlink.wrap(_worker as any) as any);
     // @ts-ignore - Promise.WithResolvers
     let { promise: clientReady, resolve } = Promise.withResolvers();
 
@@ -112,9 +122,7 @@ export class Archive {
    * @param {Object} options
    */
   constructor(file: File, options: ArchiveOptions) {
-    this._worker = new Worker(options.workerUrl, {
-      type: "module",
-    });
+    this._worker = Archive.getWorker(options);
 
     this._content = {};
     this._processed = 0;
@@ -123,7 +131,9 @@ export class Archive {
 
   private async getClient() {
     if (!this._client) {
-      const Client = Comlink.wrap(this._worker as any) as any;
+      const Client =
+        Archive._options.comlinkWrapper ||
+        (Comlink.wrap(this._worker as any) as any);
       // @ts-ignore - Promise.WithResolvers
       let { promise, resolve } = Promise.withResolvers();
       this._client = await new Client(

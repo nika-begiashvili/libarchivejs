@@ -1,7 +1,9 @@
 import { ArchiveCompression, ArchiveFormat } from "./formats.js";
 export { ArchiveCompression, ArchiveFormat } from "./formats.js";
 export type ArchiveOptions = {
-    workerUrl: string | URL;
+    workerUrl?: string | URL;
+    worker?: any;
+    comlinkWrapper?: any;
 };
 export type ArchiveEntry = {
     size: number;
@@ -34,7 +36,8 @@ export declare class Archive {
     private _processed;
     private _file;
     private _client;
-    static write({ files, outputFileName, compression, format, passphrase }: ArchiveWriteOptions): Promise<File>;
+    static getWorker(options: ArchiveOptions): any;
+    static write({ files, outputFileName, compression, format, passphrase, }: ArchiveWriteOptions): Promise<File>;
     /**
      * Creates new archive instance from browser native File object
      * @param {File} file

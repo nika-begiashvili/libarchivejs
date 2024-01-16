@@ -1,40 +1,5 @@
-/**
- * Represents compressed file before extraction
- */
-class CompressedFile {
-    constructor(name, size, path, lastModified, archiveRef) {
-        this._name = name;
-        this._size = size;
-        this._path = path;
-        this._lastModified = lastModified;
-        this._archiveRef = archiveRef;
-    }
-    /**
-     * File name
-     */
-    get name() {
-        return this._name;
-    }
-    /**
-     * File size
-     */
-    get size() {
-        return this._size;
-    }
-    /*
-     * Last modified nano seconds
-     */
-    get lastModified() {
-        return this._lastModified;
-    }
-    /**
-     * Extract file from archive
-     * @returns {Promise<File>} extracted file
-     */
-    extract() {
-        return this._archiveRef.extractSingleFile(this._path);
-    }
-}
+import { Worker as Worker$1 } from 'worker_threads';
+import { URL as URL$1 } from 'url';
 
 /**
  * @license
@@ -373,6 +338,77 @@ function generateUUID() {
         .join("-");
 }
 
+/**
+ * @license
+ * Copyright 2019 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+function nodeEndpoint(nep) {
+    const listeners = new WeakMap();
+    return {
+        postMessage: nep.postMessage.bind(nep),
+        addEventListener: (_, eh) => {
+            const l = (data) => {
+                if ("handleEvent" in eh) {
+                    eh.handleEvent({ data });
+                }
+                else {
+                    eh({ data });
+                }
+            };
+            nep.on("message", l);
+            listeners.set(eh, l);
+        },
+        removeEventListener: (_, eh) => {
+            const l = listeners.get(eh);
+            if (!l) {
+                return;
+            }
+            nep.off("message", l);
+            listeners.delete(eh);
+        },
+        start: nep.start && nep.start.bind(nep),
+    };
+}
+
+/**
+ * Represents compressed file before extraction
+ */
+class CompressedFile {
+    constructor(name, size, path, lastModified, archiveRef) {
+        this._name = name;
+        this._size = size;
+        this._path = path;
+        this._lastModified = lastModified;
+        this._archiveRef = archiveRef;
+    }
+    /**
+     * File name
+     */
+    get name() {
+        return this._name;
+    }
+    /**
+     * File size
+     */
+    get size() {
+        return this._size;
+    }
+    /*
+     * Last modified nano seconds
+     */
+    get lastModified() {
+        return this._lastModified;
+    }
+    /**
+     * Extract file from archive
+     * @returns {Promise<File>} extracted file
+     */
+    extract() {
+        return this._archiveRef.extractSingleFile(this._path);
+    }
+}
+
 function cloneContent(obj) {
     if (obj instanceof File || obj instanceof CompressedFile || obj === null)
         return obj;
@@ -643,5 +679,19 @@ class Archive {
         return cloneContent(this._content);
     }
 }
+
+Promise.withResolvers || (Promise.withResolvers = function withResolvers() {
+    var a, b, c = new this(function (resolve, reject) {
+        a = resolve;
+        b = reject;
+    });
+    return { resolve: a, reject: b, promise: c };
+});
+const __dirname = new URL$1('.', import.meta.url).pathname;
+const worker = new Worker$1(`${__dirname}/worker-bundle-node.mjs`);
+Archive.init({
+    worker: worker,
+    comlinkWrapper: wrap(nodeEndpoint(worker))
+});
 
 export { Archive, ArchiveCompression, ArchiveFormat };
