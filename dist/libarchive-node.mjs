@@ -510,8 +510,8 @@ class Archive {
         return Archive._options;
     }
     static getWorker(options) {
-        if (options.worker) {
-            return options.worker;
+        if (options.getWorker) {
+            return options.getWorker();
         }
         else {
             return new Worker((options === null || options === void 0 ? void 0 : options.workerUrl) || new URL("./worker-bundle.js", import.meta.url), {
@@ -520,8 +520,9 @@ class Archive {
         }
     }
     static async write({ files, outputFileName, compression, format, passphrase = null, }) {
+        var _a, _b;
         const _worker = Archive.getWorker(Archive._options);
-        const Client = Archive._options.comlinkWrapper || wrap(_worker);
+        const Client = ((_b = (_a = Archive._options).createClient) === null || _b === void 0 ? void 0 : _b.call(_a, _worker)) || wrap(_worker);
         // @ts-ignore - Promise.WithResolvers
         let { promise: clientReady, resolve } = Promise.withResolvers();
         const _client = await new Client(proxy(() => {
@@ -556,8 +557,10 @@ class Archive {
         this._file = file;
     }
     async getClient() {
+        var _a, _b;
         if (!this._client) {
-            const Client = Archive._options.comlinkWrapper || wrap(this._worker);
+            const Client = ((_b = (_a = Archive._options).createClient) === null || _b === void 0 ? void 0 : _b.call(_a, this._worker)) ||
+                wrap(this._worker);
             // @ts-ignore - Promise.WithResolvers
             let { promise, resolve } = Promise.withResolvers();
             this._client = await new Client(proxy(() => {
@@ -680,18 +683,19 @@ class Archive {
     }
 }
 
-Promise.withResolvers || (Promise.withResolvers = function withResolvers() {
-    var a, b, c = new this(function (resolve, reject) {
-        a = resolve;
-        b = reject;
+// Polyfill for Promise.withResolvers on nodejs
+Promise.withResolvers ||
+    (Promise.withResolvers = function withResolvers() {
+        var a, b, c = new this(function (resolve, reject) {
+            a = resolve;
+            b = reject;
+        });
+        return { resolve: a, reject: b, promise: c };
     });
-    return { resolve: a, reject: b, promise: c };
-});
-const __dirname = new URL$1('.', import.meta.url).pathname;
-const worker = new Worker$1(`${__dirname}/worker-bundle-node.mjs`);
+const __dirname = new URL$1(".", import.meta.url).pathname;
 Archive.init({
-    worker: worker,
-    comlinkWrapper: wrap(nodeEndpoint(worker))
+    getWorker: () => new Worker$1(`${__dirname}/worker-bundle-node.mjs`),
+    createClient: (worker) => wrap(nodeEndpoint(worker)),
 });
 
 export { Archive, ArchiveCompression, ArchiveFormat };

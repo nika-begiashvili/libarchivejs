@@ -10,8 +10,8 @@ export { ArchiveCompression, ArchiveFormat } from "./formats.js";
 
 export type ArchiveOptions = {
   workerUrl?: string | URL;
-  worker?: any;
-  comlinkWrapper?: any;
+  getWorker?: Function;
+  createClient?: (worker: any) => any;
 };
 
 export type ArchiveEntry = {
@@ -55,8 +55,8 @@ export class Archive {
   private _client: any;
 
   static getWorker(options: ArchiveOptions) {
-    if (options.worker) {
-      return options.worker;
+    if (options.getWorker) {
+      return options.getWorker();
     } else {
       return new Worker(
         options?.workerUrl || new URL("./worker-bundle.js", import.meta.url),
@@ -75,9 +75,9 @@ export class Archive {
     passphrase = null,
   }: ArchiveWriteOptions) {
     const _worker = Archive.getWorker(Archive._options);
-
     const Client =
-      Archive._options.comlinkWrapper || (Comlink.wrap(_worker as any) as any);
+      Archive._options.createClient?.(_worker) || (Comlink.wrap(_worker as any) as any);
+    
     // @ts-ignore - Promise.WithResolvers
     let { promise: clientReady, resolve } = Promise.withResolvers();
 
@@ -88,7 +88,7 @@ export class Archive {
     );
 
     await clientReady;
-
+    
     const archiveData = await _client.writeArchive(
       files,
       compression,
@@ -132,7 +132,7 @@ export class Archive {
   private async getClient() {
     if (!this._client) {
       const Client =
-        Archive._options.comlinkWrapper ||
+        Archive._options.createClient?.(this._worker) ||
         (Comlink.wrap(this._worker as any) as any);
       // @ts-ignore - Promise.WithResolvers
       let { promise, resolve } = Promise.withResolvers();

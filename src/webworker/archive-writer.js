@@ -15,7 +15,6 @@ export class ArchiveWriter {
     let totalSize = files.reduce((acc, { file }) => acc + file.size, 0) + 512;
 
     const bufferPtr = this._runCode.malloc(totalSize);
-    const ptrSize = this._runCode.sizeOfSizeT();
     const outputSizePtr = this._runCode.malloc(this._runCode.sizeOfSizeT());
 
     const newArchive = this._runCode.startArchiveWrite(
@@ -45,17 +44,7 @@ export class ArchiveWriter {
       throw new Error(this._runCode.getError(newArchive));
     }
 
-    const outputSizeBytes = this._wasmModule.HEAPU8.slice(
-      outputSizePtr,
-      outputSizePtr + ptrSize,
-    );
-
-    let outputSize = null;
-    if (ptrSize == 4) {
-      outputSize = new Uint32Array(outputSizeBytes)[0];
-    } else if (ptrSize == 8) {
-      outputSize = new BigUint64Array(outputSizeBytes)[0];
-    } else throw Error("Unexpected size of size_t: " + ptrSize);
+    const outputSize = this.readNumberFromPointer(outputSizePtr);
 
     return this._wasmModule.HEAPU8.slice(bufferPtr, bufferPtr + outputSize);
   }
@@ -69,5 +58,19 @@ export class ArchiveWriter {
       ptr: filePtr,
       length: array.length,
     };
+  }
+
+  readNumberFromPointer(ptr) {
+    const ptrSize = this._runCode.sizeOfSizeT();
+    const outputSizeBytes = this._wasmModule.HEAPU8.slice(ptr,ptr + ptrSize);
+
+    let output = null;
+    if (ptrSize == 4) {
+      output = new Uint32Array(outputSizeBytes)[0];
+    } else if (ptrSize == 8) {
+      output = new BigUint64Array(outputSizeBytes)[0];
+    } else throw Error("Unexpected size of size_t: " + ptrSize);
+    
+    return output;
   }
 }

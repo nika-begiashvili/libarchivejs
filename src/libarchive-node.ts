@@ -19,9 +19,7 @@ export * from "./libarchive";
 
 const __dirname = new URL(".", import.meta.url).pathname;
 
-const worker = new Worker(`${__dirname}/worker-bundle-node.mjs`);
-
 Archive.init({
-  worker: worker,
-  comlinkWrapper: Comlink.wrap(nodeEndpoint(worker)),
+  getWorker: () => new Worker(`${__dirname}/worker-bundle-node.mjs`),
+  createClient: (worker) => Comlink.wrap(nodeEndpoint(worker)),
 });

@@ -2,8 +2,8 @@ import { ArchiveCompression, ArchiveFormat } from "./formats.js";
 export { ArchiveCompression, ArchiveFormat } from "./formats.js";
 export type ArchiveOptions = {
     workerUrl?: string | URL;
-    worker?: any;
-    comlinkWrapper?: any;
+    getWorker?: Function;
+    createClient?: (worker: any) => any;
 };
 export type ArchiveEntry = {
     size: number;
