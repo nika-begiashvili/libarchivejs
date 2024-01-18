@@ -1,4 +1,4 @@
-import { Archive } from "./libarchive";
+import { ArchiveReader } from "./archive-reader";
 
 /**
  * Represents compressed file before extraction
@@ -9,7 +9,7 @@ export class CompressedFile {
     size: number,
     path: string,
     lastModified: number,
-    archiveRef: Archive,
+    archiveRef: ArchiveReader,
   ) {
     this._name = name;
     this._size = size;

@@ -1,9 +1,9 @@
-import { Archive } from "./libarchive";
+import { ArchiveReader } from "./archive-reader";
 /**
  * Represents compressed file before extraction
  */
 export declare class CompressedFile {
-    constructor(name: string, size: number, path: string, lastModified: number, archiveRef: Archive);
+    constructor(name: string, size: number, path: string, lastModified: number, archiveRef: ArchiveReader);
     private _name;
     private _size;
     private _path;

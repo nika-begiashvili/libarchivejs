@@ -510,11 +510,8 @@ class ArchiveWriter {
       passphrase,
     );
 
-    console.log("size before writing files: ", this.readNumberFromPointer(outputSizePtr));
-
     for (const { file, pathname } of files) {
       const fileData = await this._loadFile(file);
-      console.log("writing file: ", pathname || file.name, fileData.length, fileData.ptr);
       this._runCode.writeArchiveFile(
         newArchive,
         pathname || file.name,
@@ -524,8 +521,6 @@ class ArchiveWriter {
       this._runCode.free(fileData.ptr);
     }
 
-    console.log("size after writing files: ", this.readNumberFromPointer(outputSizePtr));
-
     const closeStatus = this._runCode.closeArchiveWrite(newArchive);
     const freeStatus = this._runCode.freeArchiveWrite(newArchive);
 
@@ -534,7 +529,6 @@ class ArchiveWriter {
     }
 
     const outputSize = this.readNumberFromPointer(outputSizePtr);
-    console.log("final size", outputSize, "pointer size", this._runCode.sizeOfSizeT());
 
     return this._wasmModule.HEAPU8.slice(bufferPtr, bufferPtr + outputSize);
   }

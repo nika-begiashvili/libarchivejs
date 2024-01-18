@@ -23,7 +23,7 @@ describe("extract various compression types", () => {
     await inputFile("archives/test.7z", page);
     const files = await response(page);
     expect(files).toEqual(checksum);
-  }, 16000);
+  }, 10000);
 
   test("extract single file from zip", async () => {
     await navigate(page, "test-single.html");
@@ -32,7 +32,7 @@ describe("extract various compression types", () => {
     expect(checksums[0]).toEqual(checksum[".gitignore"]);
     expect(checksums[1]).toEqual(checksum["README.md"]);
     expect(checksums[2]).toEqual(checksum["addon"]["addon.py"]);
-  }, 16000);
+  }, 10000);
 
   test("extract encrypted zip", async () => {
     await navigate(page, "encryption.html");
@@ -40,14 +40,14 @@ describe("extract various compression types", () => {
     const { files, encrypted } = await response(page);
     expect(encrypted).toEqual(true);
     expect(files).toEqual(checksum);
-  }, 16000);
+  }, 10000);
 
   test("create new tar.gz archive", async () => {
     await navigate(page, "write-archive.html");
     await inputFile("archives/README.md", page);
     const checksums = await response(page);
     expect(checksums["README.md"]).toEqual(checksum["README.md"]);
-  }, 16000);
+  }, 10000);
 });
 
 afterAll(() => {

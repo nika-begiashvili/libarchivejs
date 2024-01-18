@@ -10,12 +10,11 @@ describe("Extract file using nodejs", () => {
     let blob = new Blob([buffer]);
 
     const archive = await Archive.open(blob);
-
     const filesObj = await archive.extractFiles();
 
     const checksumObj = await fileChecksums(filesObj);
-
     expect(checksumObj).toEqual(checksum);
+    archive.close();
   }, 5000);
 
 
@@ -36,9 +35,10 @@ describe("Extract file using nodejs", () => {
 
     const archive = await Archive.open(archiveFile);
     const filesObj = await archive.extractFiles();
-
     const checksumObj = await fileChecksums(filesObj);
     expect(checksumObj["README.md"]).toEqual(checksum["README.md"]);
+
+    archive.close();
   }, 5000);
 
 });
