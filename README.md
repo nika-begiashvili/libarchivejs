@@ -9,10 +9,6 @@
     <img src="https://travis-ci.com/nika-begiashvili/libarchivejs.svg?branch=master"
          alt="build status">
   </a>
-  <a href="https://david-dm.org/nika-begiashvili/libarchivejs">
-    <img src="https://david-dm.org/nika-begiashvili/libarchivejs/status.svg"
-         alt="dependency status">
-  </a>
   <a href="https://github.com/nika-begiashvili/libarchivejs/blob/master/LICENSE">
     <img src="https://img.shields.io/npm/l/libarchive.js.svg"
          alt="license">

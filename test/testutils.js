@@ -1,6 +1,6 @@
 const StaticServer = require("static-server");
 const puppeteer = require("puppeteer");
-//const isWsl = require("is-wsl");
+const isWsl = require("is-wsl");
 const port = 8787;
 const width = 800;
 const height = 600;
@@ -20,11 +20,11 @@ const startServer = () =>
 
 module.exports = {
   setup: async () => {
-    let browser = await puppeteer.launch({
+    let browser = isWsl ? await puppeteer.launch({
       headless: "new",
       executablePath: "google-chrome",
       args: ["--no-sandbox"],
-    });
+    }) : await puppeteer.launch({headless: 'new'});
 
     let page = await browser.newPage();
     await page.setViewport({ width, height });
