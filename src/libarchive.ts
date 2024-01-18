@@ -80,7 +80,8 @@ export class Archive {
   }
 
   private static async getClient(worker: any, options: ArchiveOptions) {
-    const Client = options.createClient?.(worker) || (Comlink.wrap(worker as any) as any);
+    const Client =
+      options.createClient?.(worker) || (Comlink.wrap(worker as any) as any);
 
     // @ts-ignore - Promise.WithResolvers
     let { promise: clientReady, resolve } = Promise.withResolvers();
@@ -95,5 +96,4 @@ export class Archive {
 
     return client;
   }
-
 }

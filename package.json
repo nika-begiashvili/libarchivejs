@@ -1,8 +1,8 @@
 {
   "name": "libarchive.js",
   "version": "2.0.0",
-  "description": "extract archive files in browser, libarchive port in wasm",
-  "main": "main.js",
+  "description": "extract/create archive files in browser/nodejs, libarchive port in wasm",
+  "main": "dist/libarchive.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/nika-begiashvili/libarchivejs"
@@ -24,7 +24,8 @@
     "7z",
     "javascript",
     "js",
-    "browser"
+    "browser",
+    "nodejs"
   ],
   "author": "Nika Begiashvili",
   "license": "MIT",

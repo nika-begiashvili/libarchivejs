@@ -20,11 +20,13 @@ const startServer = () =>
 
 module.exports = {
   setup: async () => {
-    let browser = isWsl ? await puppeteer.launch({
-      headless: "new",
-      executablePath: "google-chrome",
-      args: ["--no-sandbox"],
-    }) : await puppeteer.launch({headless: 'new'});
+    let browser = isWsl
+      ? await puppeteer.launch({
+          headless: "new",
+          executablePath: "google-chrome",
+          args: ["--no-sandbox"],
+        })
+      : await puppeteer.launch({ headless: "new" });
 
     let page = await browser.newPage();
     await page.setViewport({ width, height });

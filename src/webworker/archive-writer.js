@@ -62,7 +62,7 @@ export class ArchiveWriter {
 
   readNumberFromPointer(ptr) {
     const ptrSize = this._runCode.sizeOfSizeT();
-    const outputSizeBytes = this._wasmModule.HEAPU8.slice(ptr,ptr + ptrSize);
+    const outputSizeBytes = this._wasmModule.HEAPU8.slice(ptr, ptr + ptrSize);
 
     let output = null;
     if (ptrSize == 4) {
@@ -70,7 +70,7 @@ export class ArchiveWriter {
     } else if (ptrSize == 8) {
       output = new BigUint64Array(outputSizeBytes)[0];
     } else throw Error("Unexpected size of size_t: " + ptrSize);
-    
+
     return output;
   }
 }

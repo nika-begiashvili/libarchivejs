@@ -3,57 +3,56 @@ import { CompressedFile } from "./compressed-file.js";
 import { cloneContent, getObjectPropReference, objectToArray } from "./utils";
 
 export type ArchiveEntry = {
-    size: number;
-    path: string;
-    type: string;
-    lastModified: number;
-    fileData: ArrayBuffer;
-    fileName: string;
-  };
+  size: number;
+  path: string;
+  type: string;
+  lastModified: number;
+  fileData: ArrayBuffer;
+  fileName: string;
+};
 
 export class ArchiveReader {
+  private file: File | null;
+  private client: any;
+  private worker: any;
 
-    private file: File | null;
-    private client: any;
-    private worker: any;
+  private _content: any = {};
+  private _processed: number = 0;
 
-    private _content: any = {};
-    private _processed: number = 0;
+  constructor(file: File, client: any, worker: any) {
+    this.file = file;
+    this.client = client;
+    this.worker = worker;
+  }
 
-    constructor(file: File, client: any, worker: any) {
-        this.file = file;
-        this.client = client;
-        this.worker = worker;
-    }
-
-    /**
+  /**
    * Prepares file for reading
    * @returns {Promise<Archive>} archive instance
    */
-    open(): Promise<ArchiveReader> {
-        this._content = {};
-        this._processed = 0;
-        return new Promise((resolve, _) => {
-            this.client.open(
-                this.file,
-                Comlink.proxy(() => {
-                    resolve(this);
-                }),
-            );
-        });
-    }
+  open(): Promise<ArchiveReader> {
+    this._content = {};
+    this._processed = 0;
+    return new Promise((resolve, _) => {
+      this.client.open(
+        this.file,
+        Comlink.proxy(() => {
+          resolve(this);
+        }),
+      );
+    });
+  }
 
-    /**
+  /**
    * Terminate worker to free up memory
    */
-    async close() {
-        this.worker?.terminate();
-        this.worker = null;
-        this.client = null;
-        this.file = null;
-    }
+  async close() {
+    this.worker?.terminate();
+    this.worker = null;
+    this.client = null;
+    this.file = null;
+  }
 
-    /**
+  /**
    * detect if archive has encrypted data
    * @returns {boolean|null} null if could not be determined
    */
@@ -155,6 +154,4 @@ export class ArchiveReader {
     this.worker?.terminate();
     return cloneContent(this._content);
   }
-
-
 }

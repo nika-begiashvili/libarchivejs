@@ -1,4 +1,8 @@
-import { Archive, ArchiveCompression, ArchiveFormat } from "../dist/libarchive-node.mjs";
+import {
+  Archive,
+  ArchiveCompression,
+  ArchiveFormat,
+} from "../dist/libarchive-node.mjs";
 import fs from "fs";
 import { Blob } from "buffer";
 import { fileChecksums } from "./checksum-utils";
@@ -17,16 +21,17 @@ describe("Extract file using nodejs", () => {
     archive.close();
   }, 5000);
 
-
   test("Create new archive", async () => {
     let buffer = fs.readFileSync("test/files/archives/README.md");
     let blob = new Blob([buffer]);
 
     const archiveFile = await Archive.write({
-      files: [{ 
-        file: blob,
-        pathname: "README.md",
-      }],
+      files: [
+        {
+          file: blob,
+          pathname: "README.md",
+        },
+      ],
       outputFileName: "test.tar.gz",
       compression: ArchiveCompression.GZIP,
       format: ArchiveFormat.USTAR,
@@ -40,5 +45,4 @@ describe("Extract file using nodejs", () => {
 
     archive.close();
   }, 5000);
-
 });
