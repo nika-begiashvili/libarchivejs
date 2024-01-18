@@ -21,13 +21,20 @@
 
 ## Overview
 
-Libarchivejs is a archive tool for browser which can extract various types of compression, it's a port of [libarchive](https://github.com/libarchive/libarchive) to WebAssembly and javascript wrapper to make it easier to use. Since it runs on WebAssembly performance should be near native. Supported formats: **ZIP**, **7-Zip**, **RAR v4**, **RAR v5**, **TAR**. Supported compression: **GZIP**, **DEFLATE**, **BZIP2**, **LZMA**
+Libarchivejs is a archive tool for browser which can extract and create various types of compression, it's a port of [libarchive](https://github.com/libarchive/libarchive) to WebAssembly and javascript wrapper to make it easier to use. Since it runs on WebAssembly performance should be near native. Supported formats: **ZIP**, **7-Zip**, **RAR v4**, **RAR v5**, **TAR** .etc, Supported compression: **GZIP**, **DEFLATE**, **BZIP2**, **LZMA** .etc
+
+## Version 2.0 highlights!
+
+* <font size="5">Create archives</font>
+* <font size="5">Use it in NodeJS</font>
 
 ## How to use
 
 Install with `npm i libarchive.js` and use it as a ES module.
 
-The library consists of two parts: ES module and webworker bundle, ES module part is your interface to talk to library, use it like any other module. The webworker bundle lives in the `libarchive.js/dist` folder so you need to make sure that it is available in your public folder since it will not get bundled if you're using bundler (it's all bundled up already) and specify correct path to `Archive.init()` method 
+The library consists of two parts: ES module and webworker bundle, ES module part is your interface to talk to library, use it like any other module. The webworker bundle lives in the `libarchive.js/dist` folder so you need to make sure that it is available in your public folder since it will not get bundled if you're using bundler (it's all bundled up already) and specify correct path to `Archive.init()` method  
+
+*if libarchive.js file is in the same directory as bundle file than you don't need to call `Archive.init()` at all*
 
 ```js
 import {Archive} from 'libarchive.js/main.js';
@@ -115,6 +122,43 @@ To extract a single file from the archive you can use the `extract()` method on 
     const archive = await Archive.open(file);
     await archive.usePassword("password");
     let obj = await archive.extractFiles();
+```
+
+### Create new archive
+
+**Note:** pathname is optional in browser but **required** in NodeJS
+
+```js
+    const archiveFile = await Archive.write({
+        files: [
+            { file: file, pathname: 'folder/file.zip' }
+        ],
+        outputFileName: "test.tar.gz",
+        compression: ArchiveCompression.GZIP,
+        format: ArchiveFormat.USTAR,
+        passphrase: null,
+    });
+
+```
+
+### Use it in NodeJS
+
+```js
+    import { Archive, ArchiveCompression, ArchiveFormat } from "libarchivejs/dist/libarchive-node.mjs";
+    
+    let buffer = fs.readFileSync("test/files/archives/README.md");
+    let blob = new Blob([buffer]);
+
+    const archiveFile = await Archive.write({
+      files: [{ 
+        file: blob,
+        pathname: "README.md",
+      }],
+      outputFileName: "test.tar.gz",
+      compression: ArchiveCompression.GZIP,
+      format: ArchiveFormat.USTAR,
+      passphrase: null,
+    });
 ```
 
 ## How it works
