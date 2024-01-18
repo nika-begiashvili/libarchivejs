@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "removeComments": false,
+    "sourceMap": true,
+    "target": "es2018",
+    "outDir": "build/compiled",
+    "declaration": true,
+    "strict": true,
+    "module": "esnext",
+    "noEmitOnError": true,
+    "lib": ["es2017", "WebWorker"],
+    "esModuleInterop": false
+  },
+  "include": ["src"]
+}

@@ -1,128 +1,112 @@
 #define LIBARCHIVE_STATIC
-//#include "emscripten.h"
+// #include "emscripten.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <locale.h>
 #include <archive.h>
 #include <archive_entry.h>
-#define EMSCRIPTEN_KEEPALIVE 
+#define EMSCRIPTEN_KEEPALIVE
 
 EMSCRIPTEN_KEEPALIVE
-const char * get_version(){
+const char *get_version(){
   return archive_version_string();
 }
 
 EMSCRIPTEN_KEEPALIVE
-void* archive_open( const void *buf, size_t size, const char * passphrase ){
+void *archive_open(const void *buf, size_t size, const char *passphrase, const char *locale){
   struct archive *a;
   int r;
+
+  setlocale(LC_ALL, locale);
 
   a = archive_read_new();
   archive_read_support_filter_all(a);
   archive_read_support_format_all(a);
 
-  if( passphrase ){
+  if (passphrase)
+  {
     archive_read_add_passphrase(a, passphrase);
   }
-  
+
   r = archive_read_open_memory(a, buf, size);
-  if (r != ARCHIVE_OK){
-    fprintf(stderr, "Memory read error %d\n",r);
-    fprintf(stderr, "%s\n",archive_error_string(a));
+  if (r != ARCHIVE_OK)
+  {
+    fprintf(stderr, "Memory read error %d\n", r);
+    fprintf(stderr, "%s\n", archive_error_string(a));
   }
   return a;
 }
 
 EMSCRIPTEN_KEEPALIVE
-const void* get_next_entry(void *archive){
+const void *get_next_entry(void *archive){
   struct archive_entry *entry;
-  if( archive_read_next_header(archive,&entry) == ARCHIVE_OK ){
+  if (archive_read_next_header(archive, &entry) == ARCHIVE_OK)
+  {
     return entry;
-  }else{
+  }
+  else
+  {
     return NULL;
   }
 }
 
 EMSCRIPTEN_KEEPALIVE
-void* get_filedata(void *archive,size_t buffsize){
-  void *buff = malloc( buffsize );
-  int read_size = archive_read_data(archive,buff,buffsize);
-  if( read_size < 0 ){
+void *get_filedata(void *archive, size_t buffsize){
+  void *buff = malloc(buffsize);
+  int read_size = archive_read_data(archive, buff, buffsize);
+  if (read_size < 0)
+  {
     fprintf(stderr, "Error occured while reading file");
-    return (void*) read_size;
-  }else{
+    return (void *)read_size;
+  }
+  else
+  {
     return buff;
   }
 }
 
 EMSCRIPTEN_KEEPALIVE
-void archive_close( void *archive ){
+void archive_close(void *archive){
   int r = archive_read_free(archive);
-  if (r != ARCHIVE_OK){
-    fprintf(stderr, "Error read free %d\n",r);
-    fprintf(stderr, "%s\n",archive_error_string(archive));
+  if (r != ARCHIVE_OK)
+  {
+    fprintf(stderr, "Error read free %d\n", r);
+    fprintf(stderr, "%s\n", archive_error_string(archive));
   }
 }
-/*
-#define MAXBUFLEN 1000000
 
 EMSCRIPTEN_KEEPALIVE
-int main(){
-  char source[MAXBUFLEN + 1];
-  FILE *fp = fopen("addon.zip", "r");
-  if (fp != NULL) {
-    size_t newLen = fread(source, sizeof(char), MAXBUFLEN, fp);
-    if ( ferror( fp ) != 0 ) {
-      printf("Error reading file");
-    } else {
-      source[newLen++] = '\0';       
-      void* arch = archive_open(source,newLen);
-      printf("arch: %d",arch);
-      void* entry = get_next_entry(arch);
-      size_t fsize = archive_entry_size(entry);
-      void* file = get_filedata(arch,fsize);
-      printf("file: %d",file);
-    }
-    fclose(fp);
-  }
-}*/
-
-/*
-EMSCRIPTEN_KEEPALIVE
-char* list_files( const void * buf, size_t size ){
-
-  printf("list_files start\n");
+void *start_archive_write(char *filter, char *format, void *buff, size_t buffsize, size_t *outputsize, char *passphrase){
   struct archive *a;
-  struct archive_entry *entry;
-  int r;
-  char* fname = NULL;
-  const char* tmp;
-  printf("variables initialized\n");
-  a = archive_read_new();
-  archive_read_support_filter_all(a);
-  archive_read_support_format_all(a);
-  printf("libarchive initialized\n");
-  r = archive_read_open_memory(a, buf, size);
-  if (r != ARCHIVE_OK){
-    printf("Memory read error %d\n",r);
-    printf("%s\n",archive_error_string(a));
-    exit(1);
+  a = archive_write_new();
+  archive_write_add_filter_by_name(a, filter);
+  archive_write_set_format_by_name(a, format);
+
+  if(passphrase){
+    archive_write_set_passphrase(a, passphrase);
   }
-  printf("start read\n");
-  while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
-    tmp = archive_entry_pathname(entry);
-    free(fname);
-    fname = malloc(strlen(tmp));
-    strcpy(fname,tmp);
-    archive_read_data_skip(a);
-  }
-  printf("finish read\n");
-  r = archive_read_free(a);
-  if (r != ARCHIVE_OK){
-    printf("Error read free %d\n",r);
-    printf("%s\n",archive_error_string(a));
-    exit(1);
-  }
-  return fname;
+
+  archive_write_open_memory(a, buff, buffsize, outputsize);
+  return a;
 }
-*/
+
+EMSCRIPTEN_KEEPALIVE
+void write_archive_file( void *a, char *pathname, size_t filesize , void *filedata ){
+  struct archive_entry *entry;
+
+  entry = archive_entry_new();
+  archive_entry_set_pathname(entry, pathname);
+  archive_entry_set_size(entry, filesize);
+  archive_entry_set_filetype(entry, AE_IFREG);
+  archive_entry_set_perm(entry, 0644);
+  archive_write_header(a, entry);
+  archive_write_data(a, filedata, filesize);
+
+  archive_entry_free(entry);
+}
+
+EMSCRIPTEN_KEEPALIVE
+int size_of_size_t(){
+  return sizeof(size_t);
+}
