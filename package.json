@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "extract/create archive files in browser/nodejs, libarchive port in wasm",
   "main": "dist/libarchive.js",
+  "types": "dist/build/compiled/libarchive.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/nika-begiashvili/libarchivejs"

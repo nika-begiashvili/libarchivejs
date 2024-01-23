@@ -1,12 +1,6 @@
 /* eslint-disable no-undef */
-const { checksum } = require("../checksum.js");
-const {
-  navigate,
-  inputFile,
-  response,
-  setup,
-  cleanup,
-} = require("../testutils.js");
+import { checksum } from "../checksum.js";
+import { navigate, inputFile, response, setup, cleanup } from "../testutils.mjs";
 
 let browser, page;
 

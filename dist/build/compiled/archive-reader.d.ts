@@ -14,18 +14,18 @@ export declare class ArchiveReader {
     private _processed;
     constructor(file: File, client: any, worker: any);
     /**
-   * Prepares file for reading
-   * @returns {Promise<Archive>} archive instance
-   */
+     * Prepares file for reading
+     * @returns {Promise<Archive>} archive instance
+     */
     open(): Promise<ArchiveReader>;
     /**
-   * Terminate worker to free up memory
-   */
+     * Terminate worker to free up memory
+     */
     close(): Promise<void>;
     /**
-   * detect if archive has encrypted data
-   * @returns {boolean|null} null if could not be determined
-   */
+     * detect if archive has encrypted data
+     * @returns {boolean|null} null if could not be determined
+     */
     hasEncryptedData(): Promise<boolean | null>;
     /**
      * set password to be used when reading archive

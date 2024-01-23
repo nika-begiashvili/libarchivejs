@@ -12,7 +12,7 @@ export class ArchiveWriter {
 
   async write(files, compression, format, passphrase = null) {
     // In some cases archive size might be bigger than the sum of all files due to header size
-    let totalSize = files.reduce((acc, { file }) => acc + file.size, 0) + 512;
+    let totalSize = files.reduce((acc, { file }) => acc + file.size + 128, 0) + 128;
 
     const bufferPtr = this._runCode.malloc(totalSize);
     const outputSizePtr = this._runCode.malloc(this._runCode.sizeOfSizeT());
