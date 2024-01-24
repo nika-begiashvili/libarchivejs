@@ -1,6 +1,12 @@
 /* eslint-disable no-undef */
 import { checksum } from "../checksum.js";
-import { navigate, inputFile, response, setup, cleanup } from "../testutils.mjs";
+import {
+  navigate,
+  inputFile,
+  response,
+  setup,
+  cleanup,
+} from "../testutils.mjs";
 
 let browser, page;
 

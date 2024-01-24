@@ -97,3 +97,15 @@ export class Archive {
     return client;
   }
 }
+
+// Polyfill for Promise.withResolvers
+(Promise as any).withResolvers ||
+  ((Promise as any).withResolvers = function withResolvers() {
+    var a,
+      b,
+      c = new this(function (resolve: Function, reject: Function) {
+        a = resolve;
+        b = reject;
+      });
+    return { resolve: a, reject: b, promise: c };
+  });
