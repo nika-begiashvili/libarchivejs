@@ -20,6 +20,5 @@
     "_size_of_size_t",
     "_start_archive_write",
     "_write_archive_file",
-    "_archive_write_close",
-    "_archive_write_free"
+    "_finish_archive_write"
 ]

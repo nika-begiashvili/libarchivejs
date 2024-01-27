@@ -101,7 +101,10 @@ void write_archive_file( void *a, char *pathname, size_t filesize , void *fileda
   archive_entry_set_filetype(entry, AE_IFREG);
   archive_entry_set_perm(entry, 0644);
   archive_write_header(a, entry);
-  archive_write_data(a, filedata, filesize);
+  int write_output = archive_write_data(a, filedata, filesize);
+  if( write_output != filesize ) {
+    fprintf(stderr, "Error occured while writing file, written bytes don't match file size\n");
+  }
 
   archive_entry_free(entry);
 }
@@ -109,4 +112,16 @@ void write_archive_file( void *a, char *pathname, size_t filesize , void *fileda
 EMSCRIPTEN_KEEPALIVE
 int size_of_size_t(){
   return sizeof(size_t);
+}
+
+EMSCRIPTEN_KEEPALIVE
+int finish_archive_write(void *a, size_t *outputsize){
+  if( archive_write_close(a) != ARCHIVE_OK ){
+    return -1;
+  }
+  
+  if( archive_write_free(a) != ARCHIVE_OK ){
+    return -1;
+  }
+  return *outputsize;
 }

@@ -79,13 +79,11 @@ export class WasmModule {
         "number",
       ]),
 
-      // int archive_write_close(struct archive *);
-      closeArchiveWrite: this.cwrap("archive_write_close", "number", [
+      // int finish_archive_write(void *a, size_t *outputsize)
+      finishArchiveWrite: this.cwrap("finish_archive_write", "number", [
+        "number",
         "number",
       ]),
-
-      // int archive_write_free(struct archive *);
-      freeArchiveWrite: this.cwrap("archive_write_free", "number", ["number"]),
 
       /*
        * Returns 1 if the archive contains at least one encrypted entry.

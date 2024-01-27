@@ -3982,64 +3982,58 @@ var libarchive = (() => {
       ));
     var _size_of_size_t = (Module["_size_of_size_t"] = () =>
       (_size_of_size_t = Module["_size_of_size_t"] = wasmExports["O"])());
+    var _finish_archive_write = (Module["_finish_archive_write"] = (a0, a1) =>
+      (_finish_archive_write = Module["_finish_archive_write"] =
+        wasmExports["P"])(a0, a1));
     var _free = (Module["_free"] = (a0) =>
-      (_free = Module["_free"] = wasmExports["P"])(a0));
-    var ___errno_location = () => (___errno_location = wasmExports["Q"])();
+      (_free = Module["_free"] = wasmExports["Q"])(a0));
+    var ___errno_location = () => (___errno_location = wasmExports["R"])();
     var _archive_entry_birthtime_nsec = (Module[
       "_archive_entry_birthtime_nsec"
     ] = (a0) =>
       (_archive_entry_birthtime_nsec = Module["_archive_entry_birthtime_nsec"] =
-        wasmExports["R"])(a0));
+        wasmExports["S"])(a0));
     var _archive_entry_filetype = (Module["_archive_entry_filetype"] = (a0) =>
       (_archive_entry_filetype = Module["_archive_entry_filetype"] =
-        wasmExports["S"])(a0));
+        wasmExports["T"])(a0));
     var _archive_entry_mtime_nsec = (Module["_archive_entry_mtime_nsec"] = (
       a0,
     ) =>
       (_archive_entry_mtime_nsec = Module["_archive_entry_mtime_nsec"] =
-        wasmExports["T"])(a0));
+        wasmExports["U"])(a0));
     var _archive_entry_pathname = (Module["_archive_entry_pathname"] = (a0) =>
       (_archive_entry_pathname = Module["_archive_entry_pathname"] =
-        wasmExports["U"])(a0));
+        wasmExports["V"])(a0));
     var _archive_entry_pathname_utf8 = (Module["_archive_entry_pathname_utf8"] =
       (a0) =>
         (_archive_entry_pathname_utf8 = Module["_archive_entry_pathname_utf8"] =
-          wasmExports["V"])(a0));
+          wasmExports["W"])(a0));
     var _archive_entry_size = (Module["_archive_entry_size"] = (a0) =>
-      (_archive_entry_size = Module["_archive_entry_size"] = wasmExports["W"])(
+      (_archive_entry_size = Module["_archive_entry_size"] = wasmExports["X"])(
         a0,
       ));
     var _archive_entry_is_encrypted = (Module["_archive_entry_is_encrypted"] = (
       a0,
     ) =>
       (_archive_entry_is_encrypted = Module["_archive_entry_is_encrypted"] =
-        wasmExports["X"])(a0));
+        wasmExports["Y"])(a0));
     var _archive_read_has_encrypted_entries = (Module[
       "_archive_read_has_encrypted_entries"
     ] = (a0) =>
       (_archive_read_has_encrypted_entries = Module[
         "_archive_read_has_encrypted_entries"
       ] =
-        wasmExports["Y"])(a0));
+        wasmExports["Z"])(a0));
     var _archive_read_data_skip = (Module["_archive_read_data_skip"] = (a0) =>
       (_archive_read_data_skip = Module["_archive_read_data_skip"] =
-        wasmExports["Z"])(a0));
-    var _archive_write_close = (Module["_archive_write_close"] = (a0) =>
-      (_archive_write_close = Module["_archive_write_close"] =
-        wasmExports["$"])(a0));
-    var _archive_write_free = (Module["_archive_write_free"] = (a0) =>
-      (_archive_write_free = Module["_archive_write_free"] = wasmExports["aa"])(
-        a0,
-      ));
+        wasmExports["_"])(a0));
     var _htons = (a0) => (_htons = wasmExports["htons"])(a0);
     var _ntohs = (a0) => (_ntohs = wasmExports["ntohs"])(a0);
-    var setTempRet0 = (a0) => (setTempRet0 = wasmExports["ba"])(a0);
-    var stackSave = () => (stackSave = wasmExports["ca"])();
-    var stackRestore = (a0) => (stackRestore = wasmExports["da"])(a0);
-    var stackAlloc = (a0) => (stackAlloc = wasmExports["ea"])(a0);
+    var setTempRet0 = (a0) => (setTempRet0 = wasmExports["aa"])(a0);
+    var stackSave = () => (stackSave = wasmExports["ba"])();
+    var stackRestore = (a0) => (stackRestore = wasmExports["ca"])(a0);
+    var stackAlloc = (a0) => (stackAlloc = wasmExports["da"])(a0);
     Module["cwrap"] = cwrap;
-    Module["UTF8ToString"] = UTF8ToString;
-    Module["intArrayFromString"] = intArrayFromString;
     Module["allocate"] = allocate;
     var calledRun;
     dependenciesFulfilled = function runCaller() {
