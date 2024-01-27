@@ -1,6 +1,6 @@
 {
   "name": "libarchive.js",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "extract/create archive files in browser/nodejs, libarchive port in wasm",
   "main": "dist/libarchive.js",
   "types": "dist/build/compiled/libarchive.d.ts",
